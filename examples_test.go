@@ -304,14 +304,15 @@ func ExampleCustomDataType() {
 		return of
 	})
 
-	sw.DefineDataType("", func(tvp sashay.Field) sashay.ObjectFields {
+	extractEnum := func(tvp sashay.Field) sashay.ObjectFields {
 		of := sashay.ObjectFields{"type": "string"}
 		if enum := tvp.StructField.Tag.Get("enum"); enum != "" {
 			values := strings.Split(enum, "|")
 			of["enum"] = fmt.Sprintf("['%s']", strings.Join(values, "', '"))
 		}
 		return of
-	})
+	}
+	sw.DefineDataType("", sashay.BuiltinDataTyperFor("", extractEnum))
 
 	sw.Add(sashay.NewOperation(
 		"POST",

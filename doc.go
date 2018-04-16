@@ -430,13 +430,17 @@ DefineDataType takes in an instance of a value to map into a data type
 and the DataTyper transformer function.
 SimpleDataTyper uses the given type and format strings.
 
-Sashay includes two other build in DataTypers:
+Sashay includes other built-in DataTypers:
 
 - DefaultDataTyper() will parse the "default" struct tag and write it into the "default" field.
 
 - ChainDataTyper calls one DataTyper after another.
 The most common usage is to use this around SimpleDataTyper and DefaultDataTyper,
 but feel free to get creative.
+
+- BuiltinDataTyperFor returns the default DataTyper behavior for a type.
+This is useful when you want to extend the behavior for a built-in type,
+but not entirely replace it (we use it below, for a custom string data typer behavior).
 
 The DataTyper function can get more creative, too.
 For example, it can parse struct fields to inform what should write into the Swagger file.

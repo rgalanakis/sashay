@@ -90,7 +90,7 @@ func noopDataTyper(_ Field) ObjectFields {
 // BuiltinDataTyperFor returns the default/builtin DataTyper for type of value.
 // The default data typers are always SimpleDataTyper with the right type and format fields.
 // If value is an unsupported type, return only the DefaultDataTyper.
-func BuiltinDataTyperFor(value interface{}) DataTyper {
+func BuiltinDataTyperFor(value interface{}, chained ...DataTyper) DataTyper {
 	dt := noopDataTyper
 	switch value.(type) {
 	case int, int64:
@@ -108,5 +108,7 @@ func BuiltinDataTyperFor(value interface{}) DataTyper {
 	case time.Time:
 		dt = SimpleDataTyper("string", "date-time")
 	}
-	return ChainDataTyper(dt, defaultDataTyper)
+	typers := []DataTyper{dt, defaultDataTyper}
+	typers = append(typers, chained...)
+	return ChainDataTyper(typers...)
 }
