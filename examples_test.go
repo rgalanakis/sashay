@@ -1,0 +1,365 @@
+package sashay_test
+
+import (
+	"fmt"
+	"strings"
+	"time"
+
+	"github.com/rgalanakis/sashay"
+)
+
+func ExampleParameters() {
+	sw := sashay.New("t", "d", "v")
+	op := sashay.NewOperation(
+		"POST",
+		"/users/:id",
+		"Update the user.",
+		struct {
+			ID         int    `path:"id" validate:"min=1"`
+			Pretty     bool   `query:"pretty" description:"If true, return pretty-printed JSON." default:"true"`
+			NoResponse bool   `header:"X-NO-RESPONSE" description:"If true, return a 204 rather than the updated User."`
+			Name       string `json:"name"`
+		}{},
+		nil,
+		nil,
+	)
+	sw.Add(op)
+	fmt.Println(sw.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /users/{id}:
+	//     post:
+	//       operationId: postUsersId
+	//       summary: Update the user.
+	//       parameters:
+	//         - name: id
+	//           in: path
+	//           required: true
+	//           schema:
+	//             type: integer
+	//             format: int64
+	//         - name: pretty
+	//           in: query
+	//           description: If true, return pretty-printed JSON.
+	//           schema:
+	//             type: boolean
+	//             default: true
+	//         - name: X-NO-RESPONSE
+	//           in: header
+	//           description: If true, return a 204 rather than the updated User.
+	//           schema:
+	//             type: boolean
+	//       requestBody:
+	//         required: true
+	//         content:
+	//           application/json:
+	//             schema:
+	//               type: object
+	//               properties:
+	//                 name:
+	//                   type: string
+	//       responses:
+	//         '204':
+	//           description: The operation completed successfully.
+	//         'default':
+	//           description: error response
+	// components:
+}
+
+func ExampleUsableParams() {
+	//sw := sashay.New("t", "d", "v")
+	//router := echo.New()
+	//
+	//type getUsersParams struct {
+	//	Status string `query:"status" validate:"eq=active|eq=deleted"`
+	//}
+	//getUsersOp := sashay.NewOperation(
+	//	"GET",
+	//	"/users",
+	//	"Get users",
+	//	getUsersParams{},
+	//	[]User{},
+	//	ErrorModel{},
+	//)
+	//getUsersHandler := func(c echo.Context) error {
+	//	params := getUsersParams{}
+	//	if err := c.Bind(&params); err != nil {
+	//		return err
+	//	}
+	//	if err := c.Validate(params); err != nil {
+	//		return err
+	//	}
+	//	var users []User
+	//	// Logic to get users
+	//	return c.JSON(200, users)
+	//}
+	//
+	//sw.Add(getUsersOp)
+	//router.Add(getUsersOp.Method, getUsersOp.Path, getUsersHandler)
+}
+
+func ExampleNestedParams() {
+	sw := sashay.New("t", "d", "v")
+	op := sashay.NewOperation(
+		"POST",
+		"/users",
+		"Create a user.",
+		struct {
+			Name struct {
+				First string `json:"first"`
+				Last  string `json:"last"`
+			} `json:"name"`
+		}{},
+		nil,
+		nil,
+	)
+	sw.Add(op)
+	fmt.Println(sw.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /users:
+	//     post:
+	//       operationId: postUsers
+	//       summary: Create a user.
+	//       requestBody:
+	//         required: true
+	//         content:
+	//           application/json:
+	//             schema:
+	//               type: object
+	//               properties:
+	//                 name:
+	//                   type: object
+	//                   properties:
+	//                     first:
+	//                       type: string
+	//                     last:
+	//                       type: string
+	//       responses:
+	//         '204':
+	//           description: The operation completed successfully.
+	//         'default':
+	//           description: error response
+	// components:
+}
+
+func ExampleBasicResponse() {
+	sw := sashay.New("t", "d", "v")
+	op := sashay.NewOperation(
+		"GET",
+		"/users",
+		"",
+		nil,
+		[]User{},
+		ErrorModel{},
+	)
+	sw.Add(op)
+	fmt.Println(sw.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /users:
+	//     get:
+	//       operationId: getUsers
+	//       responses:
+	//         '200':
+	//           description: ok response
+	//           content:
+	//             application/json:
+	//               schema:
+	//                 type: array
+	//                 items:
+	//                   $ref: '#/components/schemas/User'
+	//         'default':
+	//           description: error response
+	//           content:
+	//             application/json:
+	//               schema:
+	//                 $ref: '#/components/schemas/ErrorModel'
+	// components:
+	//   schemas:
+	//     ErrorModel:
+	//       type: object
+	//       properties:
+	//         error:
+	//           type: object
+	//           properties:
+	//             message:
+	//               type: string
+	//             code:
+	//               type: integer
+	//               format: int64
+	//     User:
+	//       type: object
+	//       properties:
+	//         result:
+	//           type: object
+	//           properties:
+	//             id:
+	//               type: integer
+	//               format: int64
+	//             name:
+	//               type: string
+}
+
+func ExampleAdvancedResponses() {
+	sw := sashay.New("t", "d", "v")
+
+	type TeapotResponse struct {
+		Probability float64 `json:"prob"`
+	}
+	type TeapotError struct {
+		Strength float64 `json:"strength"`
+	}
+	op := sashay.NewOperation(
+		"GET",
+		"/is_teapot",
+		"Error if the server is a teapot.",
+		nil,
+		sashay.Responses{
+			sashay.NewResponse(200, "Not a teapot.", TeapotResponse{}),
+			sashay.NewResponse(203, "I may not be a teapot", TeapotResponse{}),
+		},
+		sashay.NewResponse(418, "Yes, I am sure a teapot!", TeapotError{}),
+	)
+
+	sw.Add(op)
+	fmt.Println(sw.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /is_teapot:
+	//     get:
+	//       operationId: getIsTeapot
+	//       summary: Error if the server is a teapot.
+	//       responses:
+	//         '200':
+	//           description: Not a teapot.
+	//           content:
+	//             application/json:
+	//               schema:
+	//                 $ref: '#/components/schemas/TeapotResponse'
+	//         '203':
+	//           description: I may not be a teapot
+	//           content:
+	//             application/json:
+	//               schema:
+	//                 $ref: '#/components/schemas/TeapotResponse'
+	//         '418':
+	//           description: Yes, I am sure a teapot!
+	//           content:
+	//             application/json:
+	//               schema:
+	//                 $ref: '#/components/schemas/TeapotError'
+	// components:
+	//   schemas:
+	//     TeapotError:
+	//       type: object
+	//       properties:
+	//         strength:
+	//           type: number
+	//           format: double
+	//     TeapotResponse:
+	//       type: object
+	//       properties:
+	//         prob:
+	//           type: number
+	//           format: double
+}
+
+func ExampleCustomDataType() {
+	sw := sashay.New("t", "d", "v")
+
+	type UnitOfTime struct {
+		time time.Time
+		unit string
+	}
+
+	sw.DefineDataType(UnitOfTime{}, func(tvp sashay.Field) sashay.ObjectFields {
+		of := sashay.ObjectFields{"type": "string"}
+		if timeunit := tvp.StructField.Tag.Get("timeunit"); timeunit != "" {
+			switch timeunit {
+			case "date":
+				of["format"] = "date"
+			case "month":
+				of["format"] = "YYYY-MM"
+			}
+		}
+		return of
+	})
+
+	sw.DefineDataType("", func(tvp sashay.Field) sashay.ObjectFields {
+		of := sashay.ObjectFields{"type": "string"}
+		if enum := tvp.StructField.Tag.Get("enum"); enum != "" {
+			values := strings.Split(enum, "|")
+			of["enum"] = fmt.Sprintf("['%s']", strings.Join(values, "', '"))
+		}
+		return of
+	})
+
+	sw.Add(sashay.NewOperation(
+		"POST",
+		"/stuff",
+		"Update stuff.",
+		struct {
+			StartMonth UnitOfTime `json:"startMonth" timeunit:"month"`
+			EndDay     UnitOfTime `json:"endDay" timeunit:"date"`
+			Status     string     `json:"status" enum:"on|off"`
+		}{},
+		nil,
+		nil,
+	))
+	fmt.Println(sw.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /stuff:
+	//     post:
+	//       operationId: postStuff
+	//       summary: Update stuff.
+	//       requestBody:
+	//         required: true
+	//         content:
+	//           application/json:
+	//             schema:
+	//               type: object
+	//               properties:
+	//                 startMonth:
+	//                   type: string
+	//                   format: YYYY-MM
+	//                 endDay:
+	//                   type: string
+	//                   format: date
+	//                 status:
+	//                   type: string
+	//                   enum: ['on', 'off']
+	//       responses:
+	//         '204':
+	//           description: The operation completed successfully.
+	//         'default':
+	//           description: error response
+	// components:
+
+}
