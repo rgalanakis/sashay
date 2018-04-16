@@ -2,6 +2,7 @@ package sashay
 
 import (
 	"sort"
+	"time"
 )
 
 // dataTypeDef associates a Field with the DataTyper for that field.
@@ -78,4 +79,34 @@ func ChainDataTyper(typers ...DataTyper) DataTyper {
 		}
 		return result
 	}
+}
+
+var defaultDataTyper = DefaultDataTyper()
+
+func noopDataTyper(_ Field) ObjectFields {
+	return ObjectFields{}
+}
+
+// BuiltinDataTyperFor returns the default/builtin DataTyper for type of value.
+// The default data typers are always SimpleDataTyper with the right type and format fields.
+// If value is an unsupported type, return only the DefaultDataTyper.
+func BuiltinDataTyperFor(value interface{}) DataTyper {
+	dt := noopDataTyper
+	switch value.(type) {
+	case int, int64:
+		dt = SimpleDataTyper("integer", "int64")
+	case int32:
+		dt = SimpleDataTyper("integer", "int32")
+	case string:
+		dt = SimpleDataTyper("string", "")
+	case bool:
+		dt = SimpleDataTyper("boolean", "")
+	case float64:
+		dt = SimpleDataTyper("number", "double")
+	case float32:
+		dt = SimpleDataTyper("number", "float")
+	case time.Time:
+		dt = SimpleDataTyper("string", "date-time")
+	}
+	return ChainDataTyper(dt, defaultDataTyper)
 }

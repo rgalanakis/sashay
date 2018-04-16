@@ -44,17 +44,14 @@ func New(title, description, version string) *Sashay {
 		dataTypesForTypes:  make(map[reflect.Type]dataTypeDef),
 	}
 
-	defaultDT := DefaultDataTyper()
-	sw.DefineDataType(int(0), ChainDataTyper(SimpleDataTyper("integer", "int64"), defaultDT))
-	sw.DefineDataType(int64(0), ChainDataTyper(SimpleDataTyper("integer", "int64"), defaultDT))
-	sw.DefineDataType(int32(0), ChainDataTyper(SimpleDataTyper("integer", "int32"), defaultDT))
-	sw.DefineDataType("", ChainDataTyper(SimpleDataTyper("string", ""), defaultDT))
-	sw.DefineDataType(false, ChainDataTyper(SimpleDataTyper("boolean", ""), defaultDT))
-	sw.DefineDataType(float64(0), ChainDataTyper(SimpleDataTyper("number", "double"), defaultDT))
-	sw.DefineDataType(float32(0), ChainDataTyper(SimpleDataTyper("number", "float"), defaultDT))
-	sw.DefineDataType(time.Time{}, ChainDataTyper(SimpleDataTyper("string", "date-time"), defaultDT))
+	for _, v := range builtinDataTypeValues {
+		sw.DefineDataType(v, BuiltinDataTyperFor(v))
+	}
+
 	return sw
 }
+
+var builtinDataTypeValues = []interface{}{int(0), int64(0), int32(0), "", false, float64(0), float32(0), time.Time{}}
 
 // Add registers a Swagger operations and all the associated types.
 func (sa *Sashay) Add(op Operation) Operation {
