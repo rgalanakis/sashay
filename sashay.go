@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"reflect"
 	"strings"
 	"time"
@@ -203,6 +204,17 @@ func (sa *Sashay) BuildYAML() string {
 	buf := bytes.NewBuffer(nil)
 	sa.WriteYAML(buf)
 	return buf.String()
+}
+
+// WriteYAMLFile writes the YAML Swagger string to the file at filename.
+// File-writing behavior works like ioutil.WriteFile.
+func (sa *Sashay) WriteYAMLFile(filename string) error {
+	f, err := os.OpenFile(filename, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+	defer f.Close()
+	if err != nil {
+		return err
+	}
+	return sa.WriteYAML(f)
 }
 
 func (sa *Sashay) dataTypeDefFor(tvp Field) (dataTypeDef, bool) {
