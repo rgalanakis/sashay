@@ -43,8 +43,9 @@ func (b *baseBuilder) writeDataType(indent int, f Field) {
 	if !found {
 		panic("no dataTypeDef defined for kind " + f.Kind.String() + " type " + f.Type.String())
 	}
-	fields := dataTypeDef.DataTyper(f).Sorted()
-	for _, kv := range fields {
+	objectFields := ObjectFields{}
+	dataTypeDef.DataTyper(f, objectFields)
+	for _, kv := range objectFields.Sorted() {
 		b.writeLn(indent, "%s: %s", kv[0], kv[1])
 	}
 }

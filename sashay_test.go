@@ -909,8 +909,8 @@ security:
 	})
 
 	It("can override builtin data types", func() {
-		sw.DefineDataType("", sashay.BuiltinDataTyperFor("", func(tvp sashay.Field) sashay.ObjectFields {
-			return sashay.ObjectFields{"format": "hello"}
+		sw.DefineDataType("", sashay.BuiltinDataTyperFor("", func(_ sashay.Field, of sashay.ObjectFields) {
+			of["format"] = "hello"
 		}))
 		sw.Add(sashay.NewOperation(
 			"POST",
