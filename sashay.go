@@ -25,7 +25,7 @@ type Sashay struct {
 	contactName, contactURL, contactEmail string
 	licenseName, licenseURL               string
 	tags                                  []swaggerTag
-	dataTypesForTypes                     map[reflect.Type]DataTypeDef
+	dataTypesForTypes                     map[reflect.Type]dataTypeDef
 }
 
 // New returns a pointer to a new Sashay instance,
@@ -40,7 +40,7 @@ func New(title, description, version string) *Sashay {
 		operations:         make([]internalOperation, 0),
 		servers:            make([]swaggerServer, 0),
 		securities:         make([]swaggerSecurity, 0),
-		dataTypesForTypes:  make(map[reflect.Type]DataTypeDef),
+		dataTypesForTypes:  make(map[reflect.Type]dataTypeDef),
 	}
 
 	defaultDT := DefaultDataTyper()
@@ -149,6 +149,7 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 }
 
 // DefineDataType defines the DataTyper to use for values with the same type as i.
+//
 // For example, DefineDataType(int(0), SimpleDataTyper("integer", "int64")) means that
 // whenever the options for a boolean field are written out,
 // it will get the properties {type: "integer", format: "int64"}.
@@ -176,10 +177,12 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 // The DataTyper above will be called for any struct field with a type of FormattableString,
 // and use a value for the "format" field based on the struct field's tag.
 //
+// The Sashay package documentation has more extensive details.
+//
 // See https://swagger.io/specification/#dataTypes
 func (sa *Sashay) DefineDataType(i interface{}, dt DataTyper) {
 	tvp := NewField(i)
-	sa.dataTypesForTypes[tvp.Type] = DataTypeDef{tvp, dt}
+	sa.dataTypesForTypes[tvp.Type] = dataTypeDef{tvp, dt}
 }
 
 func (sa *Sashay) WriteYAML(buf io.Writer) error {
@@ -202,7 +205,7 @@ func (sa *Sashay) BuildYAML() string {
 	return buf.String()
 }
 
-func (sa *Sashay) dataTypeDefFor(tvp Field) (DataTypeDef, bool) {
+func (sa *Sashay) dataTypeDefFor(tvp Field) (dataTypeDef, bool) {
 	dtd, ok := sa.dataTypesForTypes[tvp.Type]
 	return dtd, ok
 }

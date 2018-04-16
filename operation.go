@@ -119,9 +119,10 @@ type Response struct {
 	Field       Field
 }
 
-// NewResponse returns a new Response initialized with the given code and description,
-// and a Field initialized against shape.
+// NewResponse returns a new Response initialized with the given code and description.
 // code is an HTTP status code, or -1 for "default".
+// shape should be the return object, like what is passed as NewOperation's
+// returnOK or returnErr argument (something like User{} or ErrorResponse{}).
 func NewResponse(code int, description string, shape interface{}) Response {
 	var strcode string
 	if code == -1 {

@@ -4,8 +4,8 @@ import (
 	"sort"
 )
 
-// DataTypeDef associates a Field with the DataTyper for that field.
-type DataTypeDef struct {
+// dataTypeDef associates a Field with the DataTyper for that field.
+type dataTypeDef struct {
 	Field     Field
 	DataTyper DataTyper
 }
@@ -41,18 +41,8 @@ func (dtf ObjectFields) Sorted() [][]string {
 // DataTyper returns the ObjectFields for a Field (which should represent a data type, not a deep/struct type).
 type DataTyper func(tvp Field) ObjectFields
 
-func ChainDataTyper(typers ...DataTyper) DataTyper {
-	return func(tvp Field) ObjectFields {
-		result := ObjectFields{}
-		for _, t := range typers {
-			for k, v := range t(tvp) {
-				result[k] = v
-			}
-		}
-		return result
-	}
-}
-
+// SimpleDataTyper returns a DataTyper that will specify a "type" field of type,
+// and a "format" field of format, if not empty.
 func SimpleDataTyper(typ, format string) DataTyper {
 	return func(tvp Field) ObjectFields {
 		f := ObjectFields{"type": typ}
@@ -63,6 +53,8 @@ func SimpleDataTyper(typ, format string) DataTyper {
 	}
 }
 
+// DefaultDataTyper returns a DataTyper that sets the "default" field of the data type
+// to the "default" value of the struct tag on the Field passed to it.
 func DefaultDataTyper() DataTyper {
 	return func(tvp Field) ObjectFields {
 		f := ObjectFields{}
@@ -70,5 +62,20 @@ func DefaultDataTyper() DataTyper {
 			f["default"] = d
 		}
 		return f
+	}
+}
+
+// ChainDataTyper returns a DataTyper that will call each function in typers in order,
+// merging all the returned ObjectFields.
+// In conflict, later typers will take priority.
+func ChainDataTyper(typers ...DataTyper) DataTyper {
+	return func(tvp Field) ObjectFields {
+		result := ObjectFields{}
+		for _, t := range typers {
+			for k, v := range t(tvp) {
+				result[k] = v
+			}
+		}
+		return result
 	}
 }

@@ -49,8 +49,7 @@ the Pet Store example is only one such structure, with centralized routing and g
 Sashay, being a library, can fit into any application setup.
 It just needs to get the right calls, which should be clear by the end, as the API has very few moving parts.
 
-
-Tutorial Step 1: Define Service-Level Settings
+Tutorial Step 1- Define Service Level Settings
 
 In our example petstore.yaml file, we have the following settings that apply to the service,
 rather than any specific paths, operations, or resources:
@@ -106,7 +105,7 @@ This code uses "apiKey" security, via AddAPIKeySecurity. The sashay.Sashay objec
 AddBasicAuthSecurity and AddJWTSecurity methods available.
 
 
-Tutorial Step 2: Define Operations
+Tutorial Step 2- Define Operations
 
 An "operation" in OpenAPI 3.0 is a description for a path/route and method.
 For example, here is the GET /pets endpoint Swagger YAML:
@@ -207,7 +206,7 @@ In this code, we have a custom Route struct that marries the Operation along wit
 	}
 
 
-Tutorial Step 3: Generate the OpenAPI File
+Tutorial Step 3- Generate the OpenAPI File
 
 Finally, there is the server startup code, usually in some sort of main() function.
 This code initializes a new sashay.Sashay instance, registers routes,
@@ -246,7 +245,7 @@ That's all there is to it. You can see a fuller example in the petstore_test.go 
 which contains the preceding code but with more routes.
 
 
-Sashay Detail: Basic Parameters
+Sashay Detail- Basic Parameters
 
 The sashay.Operation object supports defining an endpoint's parameters.
 Because parameter settings can be quite detailed,
@@ -345,7 +344,7 @@ The same is true for response types- the schema is built from the real objects, 
 not separate documentation.
 
 
-Sashay Detail: Request Bodies
+Sashay Detail- Request Bodies
 
 Struct types can also be used in parameters.
 Usually, these will be nested structs for request bodies:
@@ -386,7 +385,7 @@ You can see the requestBody YAML it generates:
 						last:
 						  type: string
 
-Sashay Detail: Representing Custom Types
+Sashay Detail- Representing Custom Types
 
 Sometimes you want to use Go struct types that are represented as data types in Swagger.
 Times are an exampmle of this: time.Time is a Go struct type,
@@ -470,7 +469,7 @@ and specifies the "format" field based on that:
 		return of
 	})
 
-Sashay Detail: Other Advanced DataTyper Usage
+Sashay Detail- Other Advanced DataTyper Usage
 
 We can use DefineDataType to customize all sorts of behavior.
 One common usage is parsing tags to specify other information about a field, like we did with "timeunit" above.
@@ -504,7 +503,7 @@ In practice, this often means pulling this sort of data out of "validation" stru
 rather than custom struct tags like "enum" or "timeunit", but the idea is the same.
 
 
-Sashay Detail: Responses
+Sashay Detail- Responses
 
 The other part of sashay.Operation that may require some customization are usually responses.
 Sashay tries to be smart and enforce some conventions:

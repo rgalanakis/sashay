@@ -41,7 +41,7 @@ func (b *baseBuilder) writeNotEmpty(indent int, format string, s string) {
 func (b *baseBuilder) writeDataType(indent int, f Field) {
 	dataTypeDef, found := b.swagger.dataTypeDefFor(f)
 	if !found {
-		panic("no DataTypeDef defined for kind " + f.Kind.String() + " type " + f.Type.String())
+		panic("no dataTypeDef defined for kind " + f.Kind.String() + " type " + f.Type.String())
 	}
 	fields := dataTypeDef.DataTyper(f).Sorted()
 	for _, kv := range fields {
