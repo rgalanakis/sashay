@@ -183,5 +183,6 @@ components:
           type: string
 ```
 
-See the [documentation at godoc.org] for more information and tutorials about how to use Sashay.
+See the [documentation at godoc.org](https://godoc.org/github.com/rgalanakis/sashay)
+for more information and tutorials about how to use Sashay.
 See [https://swagger.io/specification/](https://swagger.io/specification/) for more info about the spec.
