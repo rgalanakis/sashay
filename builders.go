@@ -295,14 +295,16 @@ type componentsBuilder struct {
 }
 
 func (b *componentsBuilder) writeComponents() {
-	b.base.writeLn(0, "components:")
+	writeComponents := b.base.writeOnce(0, "components:")
 
 	sortedSchemas := b.sortedFieldsForSchema()
 	if len(sortedSchemas) > 0 {
+		writeComponents()
 		b.writeSchemas(sortedSchemas)
 	}
 
 	if len(b.base.swagger.securities) > 0 {
+		writeComponents()
 		b.writeSecuritySchemas()
 		b.writeSecurityScopes()
 	}

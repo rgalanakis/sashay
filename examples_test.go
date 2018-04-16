@@ -68,7 +68,6 @@ func ExampleParameters() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 }
 
 func ExampleUsableParams() {
@@ -150,7 +149,6 @@ func ExampleNestedParams() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 }
 
 func ExampleBasicResponse() {
@@ -360,6 +358,5 @@ func ExampleCustomDataType() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 
 }
