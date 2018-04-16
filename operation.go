@@ -155,7 +155,7 @@ func NewPath(s string) Path {
 	return Path(swaggerPathReplace.ReplaceAllString(s, "/{$1}"))
 }
 
-var swaggerPathReplace = regexp.MustCompile("/:([A-Za-z0-9]+)/?")
+var swaggerPathReplace = regexp.MustCompile("/:([A-Za-z0-9]+)")
 
 // OperationID represents a Swagger operationId string.
 type OperationID string

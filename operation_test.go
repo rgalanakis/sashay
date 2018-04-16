@@ -15,8 +15,14 @@ func ExampleNewMethod() {
 
 func ExampleNewPath() {
 	fmt.Println(sashay.NewPath("/users/:id"))
+	fmt.Println(sashay.NewPath("/users/:id/pets"))
+	fmt.Println(sashay.NewPath("/users/{id}"))
+	fmt.Println(sashay.NewPath("/users/{id}/pets"))
 	// Output:
 	// /users/{id}
+	// /users/{id}/pets
+	// /users/{id}
+	// /users/{id}/pets
 }
 
 func ExampleNewOperationID() {
