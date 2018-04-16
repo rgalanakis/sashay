@@ -1,20 +1,38 @@
 /*
-Package sashay generates OpenAPI 3.0 (Swagger) documentation for a service.
-See https://swagger.io/specification/ for more info about the spec.
+Package sashay allows you to generate OpenAPI 3.0 (Swagger) files using executable Go code,
+including the same types you already use for parameter declaration and serialization.
 
-swagger allows you to document your Go APIs using executable Go code,
-including the same types you use for parameter declaration and serialization.
-You can get a "good enough" Swagger document with very little work,
-using the code you already have! Creating a nicer Swagger document is generally a matter
-of adding a bit of annotation to struct tags or using some Swagger types around your API's types.
+You don't have to worry about creating extensive Swagger-specific comments
+or editing a Swagger file by hand.
+You can get a good enough Swagger document with very little work,
+using the code you already have!
 
-There are generally three parts to defining and generating Swagger docs using this package:
+- Use your existing serializable Go structs to document what an endpoint returns.
+Really, Sashay will figure out the OpenAPI contents using reflection.
 
-- Define the swagger.Swagger registry which holds all information that will be in the document.
-  This is usually a singleton for an entire service, or passed to all route registration.
-- Define new swagger.Operation instances where you have your handlers,
-  adding them to the global registry using swagger.Swagger#Add as you go.
-- Generate the docs with swagger.Swagger#WriteYAML.
+- Declare your parameters using Go structs. If you are binding and validating using structs in your endpoint handlers,
+you can use the same structs for Sashay.
+
+- You can extend Sashay to handle your own types and struct tags,
+such as if you use custom time/date types,
+or want to parse validation struct tags into something you can place in your OpenAPI doc.
+
+Creating a nicer OpenAPI 3.0 document from your existing code is generally a matter of adding
+a bit of annotation to struct tags or using some Sashay types around your API's types.
+
+See https://swagger.io/specification/ for more information about the OpenAPI 3.0 spec.
+
+Sashay Tutorial
+
+There are generally three parts to defining and generating Swagger docs using Sashay:
+
+- Define the sashay.Sashay registry which holds all information that will be in the document.
+This is usually a singleton for an entire service, or passed to all route registration.
+
+- Define new sashay.Operation instances where you have your handlers,
+adding them to the registry using the Add method as you go.
+
+- Generate the YAML string using the WriteYAML method.
 
 In the following sections, we will go through the steps to build something very similar to
 the "Pet Store API" Swagger example. This is the default example API at https:/editor.swagger.io/#/.
@@ -28,11 +46,11 @@ Note that this is for their Swagger 2.0 definition, which is much larger than th
 
 Our code will be based off that Pet Store code. There are many ways to structure a Go service;
 the Pet Store example is only one such structure, with centralized routing and general HTTP handlers.
-swagger package, being a library, can fit into any application setup.
+Sashay, being a library, can fit into any application setup.
 It just needs to get the right calls, which should be clear by the end, as the API has very few moving parts.
 
 
-Using the Swagger object to define top-level settings
+Tutorial Step 1: Define Service-Level Settings
 
 In our example petstore.yaml file, we have the following settings that apply to the service,
 rather than any specific paths, operations, or resources:
@@ -61,48 +79,34 @@ rather than any specific paths, operations, or resources:
 	security:
 	  - apiKeyAuth: []
 
-We can use the following swagger code to create a *swagger.Swagger object that will generate that YAML.
+We can use the following code to create a *sashay.Sashay object that will generate that YAML.
 This can be a stateful singleton, placed somewhere accessible to all handlers and routers,
 like some common or config file.
-In our example, we create it in our main/StartServer function, and pass it to the router:
+Later in our example, we create the instance in our main function,
+and pass it to the router:
 
-	// main.go
-	func PetStoreSwagger() *swagger.Swagger {
-		return swagger.New(
-			"Swagger Petstore",
-			"A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification",
-			"1.0.0").
-			AddAPIKeySecurity("header", "api_key").
-			SetTermsOfService("http://swagger.io/terms/").
-			SetContact("", "", "apiteam@swagger.io").
-			SetLicense("Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0.html").
-			AddServer("http://petstore.swagger.io/api", "Public API server").
-			AddTag("pet", "Everything about your Pets").
-			AddTag("store", "Access to Petstore orders").
-			AddTag("user", "Operations about user")
-	}
-
-	func StartServer() {
-		sw := PetStoreSwagger()
-		router := &FrameworkRouter{}
-		RegisterRoutes(router, sw)
-		if len(os.Args) > 0 && os.Args[0] == "-swagger" {
-			yaml := sw.BuildYAML()
-			ioutil.WriteFile("swagger.yml", []byte(yaml), 0644)
-			os.Exit(0)
-		}
-		http.ListenAndServe(":8080", router)
-	}
+	sa := sashay.New(
+		"Swagger Petstore",
+		"A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification",
+		"1.0.0").
+		AddAPIKeySecurity("header", "api_key").
+		SetTermsOfService("http://swagger.io/terms/").
+		SetContact("", "", "apiteam@swagger.io").
+		SetLicense("Apache 2.0", "http://www.apache.org/licenses/LICENSE-2.0.html").
+		AddServer("http://petstore.swagger.io/api", "Public API server").
+		AddTag("pet", "Everything about your Pets").
+		AddTag("store", "Access to Petstore orders").
+		AddTag("user", "Operations about user")
 
 The way this code maps to the YAML should be pretty self-explanatory.
 For more information on any of these, you can refer to the OpenAPI documentation,
 as it maps cleanly.
 
-This code uses "apiKey" security, via AddAPIKeySecurity. The swagger.Swagger object also has
+This code uses "apiKey" security, via AddAPIKeySecurity. The sashay.Sashay object also has
 AddBasicAuthSecurity and AddJWTSecurity methods available.
 
 
-Defining operations
+Tutorial Step 2: Define Operations
 
 An "operation" in OpenAPI 3.0 is a description for a path/route and method.
 For example, here is the GET /pets endpoint Swagger YAML:
@@ -168,17 +172,17 @@ It is code that already exists for your service.
 Finally, we get to the route definitions/registration.
 This, too, is something that needs to happen for any service.
 The changes here have to do with registering a route adding it both to your HTTP framework's router,
-and the swagger.Swagger registry.
-Note that the swagger.Operation object has the method and path necessary to
+and the sashay.Sashay registry.
+Note that the sashay.Operation object has the method and path necessary to
 register routes in pretty much every framework.
 In this code, we have a custom Route struct that marries the Operation along with an http.HandlerFunc.
 
 	type Route struct {
-		operation swagger.Operation
+		operation sashay.Operation
 		handler   http.HandlerFunc
 	}
 
-	func RegisterRoutes(router *FrameworkRouter, sw *swagger.Swagger) {
+	func RegisterRoutes(router *FrameworkRouter, sw *sashay.Sashay) {
 		for _, route := range routes {
 			sw.Add(route.operation)
 			router.AddRoute(route.operation.Method, route.operation.Path, route.handler)
@@ -187,7 +191,7 @@ In this code, we have a custom Route struct that marries the Operation along wit
 
 	var routes = []Route{
 		{
-			swagger.NewOperation(
+			sashay.NewOperation(
 				"GET",
 				"/pets",
 				"Returns all pets from the system that the user has access to",
@@ -203,10 +207,10 @@ In this code, we have a custom Route struct that marries the Operation along wit
 	}
 
 
-Generating the Swagger file
+Tutorial Step 3: Generate the OpenAPI File
 
 Finally, there is the server startup code, usually in some sort of main() function.
-This code initializes a new swagger.Swagger instance, registers routes,
+This code initializes a new sashay.Sashay instance, registers routes,
 and writes to a yaml file if the program is run with a -swagger argument.
 This code in particular is going to be different depending on your conventions;
 the following code is just an idea to show how this all fits together.
@@ -223,7 +227,7 @@ the following code is just an idea to show how this all fits together.
 		http.ListenAndServe(":8080", router)
 	}
 
-	func PetStoreSwagger() *swagger.Swagger {
+	func PetStoreSwagger() *sashay.Sashay {
 		return swagger.New(
 			"Swagger Petstore",
 			"A sample API that uses a petstore as an example to demonstrate features in the OpenAPI 3.0 specification",
@@ -242,14 +246,14 @@ That's all there is to it. You can see a fuller example in the petstore_test.go 
 which contains the preceding code but with more routes.
 
 
-Parameters
+Sashay Detail: Basic Parameters
 
-The swagger.Operation object supports defining an endpoint's parameters.
+The sashay.Operation object supports defining an endpoint's parameters.
 Because parameter settings can be quite detailed,
 this package will parse some parameter settings from struct tags.
-Let's look at the Parameters field in the following swagger.Operation definition:
+Let's look at the Parameters field in the following sashay.Operation definition:
 
-	swagger.NewOperation(
+	sashay.NewOperation(
 		"POST",
 		"/users/:id",
 		"Update the user.",
@@ -312,7 +316,7 @@ In practice, your Operation definitions will look something like this:
 	type getUsersParams struct {
 		Status string `query:"status" validate:"eq=active|eq=deleted"`
 	}
-	getUsersOp := swagger.NewOperation(
+	getUsersOp := sashay.NewOperation(
 		"GET",
 		"/users",
 		"Get users",
@@ -341,12 +345,12 @@ The same is true for response types- the schema is built from the real objects, 
 not separate documentation.
 
 
-Advanced Parameter usage
+Sashay Detail: Request Bodies
 
 Struct types can also be used in parameters.
 Usually, these will be nested structs for request bodies:
 
-	swagger.NewOperation(
+	sashay.NewOperation(
 		"POST",
 		"/users",
 		"Create a user.",
@@ -382,31 +386,77 @@ You can see the requestBody YAML it generates:
 						last:
 						  type: string
 
-However, sometimes you want to use struct types that are represented as data types.
-Times are an exampmle of this- time.Time is a Go struct type,
-but we want to represent it with a string data type in Swagger.
-We can define custom "data types" to do this ("data type" is a Swagger term).
-For example, here is what maps time.Time to a {type: string, format: date-time} in generated Swagger:
+Sashay Detail: Representing Custom Types
 
-	sw.DefineDataType(
-		time.Time{},
-		ChainDataTyper(
-			SimpleDataTyper("string", "date-time"),
-			DefaultDataTyper()))
+Sometimes you want to use Go struct types that are represented as data types in Swagger.
+Times are an exampmle of this: time.Time is a Go struct type,
+but we want to represent it with a string data type in Swagger (type: string, format: date-time).
+For example, let's say "month" is a common concept in our API, so we represent it with a type:
 
-swagger.Swagger#DefineDataType takes in an instance of a value to map into a data type
+	type Month struct {
+		Year int
+		Month int
+	}
+
+	type Params struct {
+		Month Month `query:"month"`
+	}
+
+When we have a struct field with a type of MyTime, we would normally get a schema of:
+
+	type: object
+	properties:
+	  time:
+	    type: object
+	    properties:
+	      year:
+	        type: integer
+	      month:
+	        type: integer
+
+However, what we actually want is something like this:
+
+	type: object
+	properties:
+	  time:
+	    type: string
+	    format: YYYY-MM
+
+We can define a mapping between custom types and a "data type transformer" to do this.
+For example, to get the desired Swagger we would use a SimpleDataTyper transformer:
+
+	sa.DefineDataType(Month{}, SimpleDataTyper("string", "YYYY-MM"))
+
+DefineDataType takes in an instance of a value to map into a data type
 and the DataTyper transformer function.
-DefaultDataTyper() pulls the string from the 'default' struct tag when this value occurs on a struct field,
-and SimpleDataTyper uses the given type and format strings. ChainDataTyper calls one DataTyper after another.
+SimpleDataTyper uses the given type and format strings.
 
-For example, perhaps you have a type that represents a time.Time instance and some arbitrary unit.
-We can define a custom DataTyper that will look for a particular enum tag,
-and use that to inform the format string:
+Sashay includes two other build in DataTypers:
+
+- DefaultDataTyper() will parse the "default" struct tag and write it into the "default" field.
+
+- ChainDataTyper calls one DataTyper after another.
+The most common usage is to use this around SimpleDataTyper and DefaultDataTyper,
+but feel free to get creative.
+
+The DataTyper function can get more creative, too.
+For example, it can parse struct fields to inform what should write into the Swagger file.
+Consider a "unit of time" type that can be used for any unit, rather than custom month, day, etc types:
 
 	type UnitOfTime struct {
 		time time.Time
 		unit string
 	}
+
+And using it for parameters looks like:
+
+	type Params struct {
+		Month UnitOfTime `query:"month" timeunit:"month"`
+	}
+
+We could use a DataTyper that reads the "timeunit" struct tag,
+and specifies the "format" field based on that:
+
 	sw.DefineDataType(UnitOfTime{}, func(tvp swagger.Field) swagger.ObjectFields {
 		of := swagger.ObjectFields{"type": "string"}
 		if timeunit := tvp.StructField.Tag.Get("timeunit"); timeunit != "" {
@@ -420,8 +470,11 @@ and use that to inform the format string:
 		return of
 	})
 
-We can also override the default data type behavior,
-such as if we want to look at an enum tag for possible string values:
+Sashay Detail: Other Advanced DataTyper Usage
+
+We can use DefineDataType to customize all sorts of behavior.
+One common usage is parsing tags to specify other information about a field, like we did with "timeunit" above.
+Perhaps we want to parse an "enum" tag that specifies valid values for a string field:
 
 	sw.DefineDataType("", func(tvp swagger.Field) swagger.ObjectFields {
 		of := swagger.ObjectFields{"type": "string"}
@@ -432,54 +485,38 @@ such as if we want to look at an enum tag for possible string values:
 		return of
 	})
 
-We can put it together in the following Operation params:
+Now, when we have a string with the "enum" struct tag, we will get the "enum" field in our YAML:
 
-	struct {
-		StartMonth UnitOfTime `json:"startMonth" timeunit:"month"`
-		EndDay UnitOfTime `json:"endDay" timeunit:"date"`
+	type Params struct {
 		Status string `json:"status" enum:"on|off"`
 	}
 
-That will generate the following requestBody YAML.
-Note the custom "format" strings for startMonth and endDay,
-and the "enum" values for status:
+	schema:
+	  type: object
+	  properties:
+	    status:
+	      type: string
+	      enum: ['on', 'off']
 
-	requestBody:
-	  required: true
-	  content:
-		application/json:
-		  schema:
-			type: object
-			properties:
-			  startMonth:
-				type: string
-				format: YYYY-MM
-			  endDay:
-				type: string
-				format: date
-			  status:
-				type: string
-				enum: ['on', 'off']
-
-The goal, again, is to reuse as much of your existing code as possible,
+The goal of Sashay is, you may recall, to reuse as much of your existing code as possible,
 and to build off it rather than require a bunch of custom annotation or documentation.
 In practice, this often means pulling this sort of data out of "validation" struct tags,
-rather than custom struct tags, but the idea is the same.
+rather than custom struct tags like "enum" or "timeunit", but the idea is the same.
 
 
-Responses
+Sashay Detail: Responses
 
-The other part of Operations that may require some customization are usually responses.
-The swagger package tries to be smart and enforce some conventions:
+The other part of sashay.Operation that may require some customization are usually responses.
+Sashay tries to be smart and enforce some conventions:
 
 - Successful POSTs returns a 201.
 - All other successful methods return a 200.
 - All operations get a 'default' error response.
 
-For example, let's look at the Go code to fetch an array of users.
-Note that slice types are handled properly:
+For example, let's look at the Go code to fetch an array of users
+(we can use an empty User slice, or a custom Users slice type would work fine).
 
-	swagger.NewOperation(
+	sashay.NewOperation(
 		"GET",
 		"/users",
 		"",
@@ -488,8 +525,7 @@ Note that slice types are handled properly:
 		ErrorModel{},
 	)
 
-And the corresponding YAML.
-Note in particular that the 200 response is an array that points to references of the User schema,
+The 200 response is an array that points to references of the User schema,
 and the User and Error Model are defined in components/schemas:
 
 	paths:
@@ -540,7 +576,7 @@ However, sometimes you need more advanced response information.
 In particular, you may want to document specific error conditions or return type shapes.
 You can use the swagger.Response or swagger.Responses object for this:
 
-	swagger.NewOperation(
+	sashay.NewOperation(
 		"GET",
 		"/is_teapot",
 		"Error if the server is a teapot.",

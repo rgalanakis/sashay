@@ -10,9 +10,9 @@ import (
 
 	"math/rand"
 
-	"github.com/rgalanakis/sashay"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/rgalanakis/sashay"
 )
 
 func TestSwagger(t *testing.T) {
