@@ -908,6 +908,34 @@ security:
 		Expect(yaml).To(Not(ContainSubstring("/Custom"))) // No $ref link
 	})
 
+	It("can override builtin data types", func() {
+		sw.DefineDataType("", sashay.BuiltinDataTyperFor("", func(_ sashay.Field, of sashay.ObjectFields) {
+			of["format"] = "hello"
+		}))
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/stuff",
+			"Updates stuff.",
+			struct {
+				String string `json:"string"`
+			}{},
+			nil,
+			nil,
+		))
+		yaml := sw.BuildYAML()
+		Expect(yaml).To(ContainSubstring(`requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                string:
+                  type: string
+                  format: hello
+`))
+	})
+
 	It("can write to a custom buffer", func() {
 		b := bytes.NewBuffer([]byte("hello there!\n"))
 		sw.WriteYAML(b)

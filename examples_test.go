@@ -68,7 +68,6 @@ func ExampleParameters() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 }
 
 func ExampleUsableParams() {
@@ -150,7 +149,6 @@ func ExampleNestedParams() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 }
 
 func ExampleBasicResponse() {
@@ -293,9 +291,9 @@ func ExampleCustomDataType() {
 		unit string
 	}
 
-	sw.DefineDataType(UnitOfTime{}, func(tvp sashay.Field) sashay.ObjectFields {
-		of := sashay.ObjectFields{"type": "string"}
-		if timeunit := tvp.StructField.Tag.Get("timeunit"); timeunit != "" {
+	sw.DefineDataType(UnitOfTime{}, func(f sashay.Field, of sashay.ObjectFields) {
+		of["type"] = "string"
+		if timeunit := f.StructField.Tag.Get("timeunit"); timeunit != "" {
 			switch timeunit {
 			case "date":
 				of["format"] = "date"
@@ -303,17 +301,16 @@ func ExampleCustomDataType() {
 				of["format"] = "YYYY-MM"
 			}
 		}
-		return of
 	})
 
-	sw.DefineDataType("", func(tvp sashay.Field) sashay.ObjectFields {
-		of := sashay.ObjectFields{"type": "string"}
-		if enum := tvp.StructField.Tag.Get("enum"); enum != "" {
+	extractEnum := func(f sashay.Field, of sashay.ObjectFields) {
+		of["type"] = "string"
+		if enum := f.StructField.Tag.Get("enum"); enum != "" {
 			values := strings.Split(enum, "|")
 			of["enum"] = fmt.Sprintf("['%s']", strings.Join(values, "', '"))
 		}
-		return of
-	})
+	}
+	sw.DefineDataType("", sashay.BuiltinDataTyperFor("", extractEnum))
 
 	sw.Add(sashay.NewOperation(
 		"POST",
@@ -360,6 +357,5 @@ func ExampleCustomDataType() {
 	//           description: The operation completed successfully.
 	//         'default':
 	//           description: error response
-	// components:
 
 }

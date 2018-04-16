@@ -2,6 +2,7 @@ package sashay
 
 import (
 	"sort"
+	"time"
 )
 
 // dataTypeDef associates a Field with the DataTyper for that field.
@@ -38,30 +39,28 @@ func (dtf ObjectFields) Sorted() [][]string {
 	return result
 }
 
-// DataTyper returns the ObjectFields for a Field (which should represent a data type, not a deep/struct type).
-type DataTyper func(tvp Field) ObjectFields
+// DataTyper modifies the ObjectFields for the passed field Field.
+// The ObjectFields are written into the schema for a data type.
+type DataTyper func(f Field, of ObjectFields)
 
 // SimpleDataTyper returns a DataTyper that will specify a "type" field of type,
 // and a "format" field of format, if not empty.
-func SimpleDataTyper(typ, format string) DataTyper {
-	return func(tvp Field) ObjectFields {
-		f := ObjectFields{"type": typ}
+func SimpleDataTyper(f, format string) DataTyper {
+	return func(tvp Field, of ObjectFields) {
+		of["type"] = f
 		if format != "" {
-			f["format"] = format
+			of["format"] = format
 		}
-		return f
 	}
 }
 
 // DefaultDataTyper returns a DataTyper that sets the "default" field of the data type
 // to the "default" value of the struct tag on the Field passed to it.
 func DefaultDataTyper() DataTyper {
-	return func(tvp Field) ObjectFields {
-		f := ObjectFields{}
-		if d := tvp.StructField.Tag.Get("default"); d != "" {
-			f["default"] = d
+	return func(f Field, of ObjectFields) {
+		if d := f.StructField.Tag.Get("default"); d != "" {
+			of["default"] = d
 		}
-		return f
 	}
 }
 
@@ -69,13 +68,39 @@ func DefaultDataTyper() DataTyper {
 // merging all the returned ObjectFields.
 // In conflict, later typers will take priority.
 func ChainDataTyper(typers ...DataTyper) DataTyper {
-	return func(tvp Field) ObjectFields {
-		result := ObjectFields{}
+	return func(f Field, of ObjectFields) {
 		for _, t := range typers {
-			for k, v := range t(tvp) {
-				result[k] = v
-			}
+			t(f, of)
 		}
-		return result
 	}
+}
+
+var defaultDataTyper = DefaultDataTyper()
+
+func noopDataTyper(_ Field, _ ObjectFields) {}
+
+// BuiltinDataTyperFor returns the default/builtin DataTyper for type of value.
+// The default data typers are always SimpleDataTyper with the right type and format fields.
+// If value is an unsupported type, return only the DefaultDataTyper.
+func BuiltinDataTyperFor(value interface{}, chained ...DataTyper) DataTyper {
+	dt := noopDataTyper
+	switch value.(type) {
+	case int, int64:
+		dt = SimpleDataTyper("integer", "int64")
+	case int32:
+		dt = SimpleDataTyper("integer", "int32")
+	case string:
+		dt = SimpleDataTyper("string", "")
+	case bool:
+		dt = SimpleDataTyper("boolean", "")
+	case float64:
+		dt = SimpleDataTyper("number", "double")
+	case float32:
+		dt = SimpleDataTyper("number", "float")
+	case time.Time:
+		dt = SimpleDataTyper("string", "date-time")
+	}
+	typers := []DataTyper{dt, defaultDataTyper}
+	typers = append(typers, chained...)
+	return ChainDataTyper(typers...)
 }

@@ -430,13 +430,17 @@ DefineDataType takes in an instance of a value to map into a data type
 and the DataTyper transformer function.
 SimpleDataTyper uses the given type and format strings.
 
-Sashay includes two other build in DataTypers:
+Sashay includes other built-in DataTypers:
 
 - DefaultDataTyper() will parse the "default" struct tag and write it into the "default" field.
 
 - ChainDataTyper calls one DataTyper after another.
 The most common usage is to use this around SimpleDataTyper and DefaultDataTyper,
 but feel free to get creative.
+
+- BuiltinDataTyperFor returns the default DataTyper behavior for a type.
+This is useful when you want to extend the behavior for a built-in type,
+but not entirely replace it (we use it below, for a custom string data typer behavior).
 
 The DataTyper function can get more creative, too.
 For example, it can parse struct fields to inform what should write into the Swagger file.
@@ -456,9 +460,9 @@ And using it for parameters looks like:
 We could use a DataTyper that reads the "timeunit" struct tag,
 and specifies the "format" field based on that:
 
-	sw.DefineDataType(UnitOfTime{}, func(tvp swagger.Field) swagger.ObjectFields {
-		of := swagger.ObjectFields{"type": "string"}
-		if timeunit := tvp.StructField.Tag.Get("timeunit"); timeunit != "" {
+	sw.DefineDataType(UnitOfTime{}, func(f sashay.Field, of sashay.ObjectFields) {
+		of["type"] = "string"
+		if timeunit := f.StructField.Tag.Get("timeunit"); timeunit != "" {
 			switch timeunit {
 			case "date":
 				of["format"] = "date"
@@ -466,7 +470,6 @@ and specifies the "format" field based on that:
 				of["format"] = "YYYY-MM"
 			}
 		}
-		return of
 	})
 
 Sashay Detail- Other Advanced DataTyper Usage
@@ -475,14 +478,14 @@ We can use DefineDataType to customize all sorts of behavior.
 One common usage is parsing tags to specify other information about a field, like we did with "timeunit" above.
 Perhaps we want to parse an "enum" tag that specifies valid values for a string field:
 
-	sw.DefineDataType("", func(tvp swagger.Field) swagger.ObjectFields {
-		of := swagger.ObjectFields{"type": "string"}
-		if enum := tvp.StructField.Tag.Get("enum"); enum != "" {
+	extractEnum := func(f sashay.Field, of sashay.ObjectFields) {
+		of["type"] = "string"
+		if enum := f.StructField.Tag.Get("enum"); enum != "" {
 			values := strings.Split(enum, "|")
 			of["enum"] = fmt.Sprintf("['%s']", strings.Join(values, "', '"))
 		}
-		return of
-	})
+	}
+	sw.DefineDataType("", sashay.BuiltinDataTyperFor("", extractEnum))
 
 Now, when we have a string with the "enum" struct tag, we will get the "enum" field in our YAML:
 
