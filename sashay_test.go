@@ -944,4 +944,29 @@ openapi: 3.0.0
 info:
 `))
 	})
+
+	It("declares pointer fields in non-body parameters as required: false", func() {
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"Returns users.",
+			struct {
+				Pretty *bool `query:"pretty"`
+			}{},
+			nil,
+			nil,
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    get:
+      operationId: getUsers
+      summary: Returns users.
+      parameters:
+        - name: pretty
+          in: query
+          required: false
+          schema:
+            type: boolean
+`))
+	})
 })

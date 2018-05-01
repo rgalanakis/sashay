@@ -254,7 +254,9 @@ func (b *pathBuilder) writeParams(indent int, f Field) {
 		writeParams()
 		b.writeLn(indent+1, "- name: %s", name)
 		b.writeLn(indent+1, "  in: %s", in)
-		if in == "path" {
+		if field.Kind == reflect.Ptr {
+			b.writeLn(indent+1, "  required: false")
+		} else if in == "path" {
 			b.writeLn(indent+1, "  required: true")
 		}
 		b.base.writeNotEmpty(indent+1, "  description: %s", tag.Get("description"))
