@@ -1,6 +1,7 @@
 package sashay
 
 import (
+	"reflect"
 	"sort"
 	"time"
 )
@@ -50,6 +51,9 @@ func SimpleDataTyper(swaggerType, format string) DataTyper {
 		of["type"] = swaggerType
 		if format != "" {
 			of["format"] = format
+		}
+		if f.Kind == reflect.Ptr {
+			of["nullable"] = "true"
 		}
 	}
 }

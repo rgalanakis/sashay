@@ -969,4 +969,34 @@ info:
             type: boolean
 `))
 	})
+
+	It("declares pointer fields in body parameters as nullable: true", func() {
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/users",
+			"Returns users.",
+			struct {
+				Count *int `json:"count"`
+			}{},
+			nil,
+			nil,
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    post:
+      operationId: postUsers
+      summary: Returns users.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                count:
+                  type: integer
+                  format: int64
+                  nullable: true
+`))
+	})
 })
