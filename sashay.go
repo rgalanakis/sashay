@@ -44,14 +44,17 @@ func New(title, description, version string) *Sashay {
 		dataTypesForTypes:  make(map[reflect.Type]dataTypeDef),
 	}
 
-	for _, v := range builtinDataTypeValues {
+	for _, v := range BuiltinDataTypeValues {
 		sw.DefineDataType(v, BuiltinDataTyperFor(v))
 	}
 
 	return sw
 }
 
-var builtinDataTypeValues = []interface{}{int(0), int64(0), int32(0), "", false, float64(0), float32(0), time.Time{}}
+// BuiltinDataTypeValues is a slice of values of all supported data types.
+// Use it for when you want to define custom DataTypers for the builtin types,
+// like if you are parsing validations.
+var BuiltinDataTypeValues = []interface{}{int(0), int64(0), int32(0), "", false, float64(0), float32(0), time.Time{}}
 
 // Add registers a Swagger operations and all the associated types.
 func (sa *Sashay) Add(op Operation) Operation {

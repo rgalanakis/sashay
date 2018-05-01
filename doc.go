@@ -505,6 +505,10 @@ and to build off it rather than require a bunch of custom annotation or document
 In practice, this often means pulling this sort of data out of "validation" struct tags,
 rather than custom struct tags like "enum" or "timeunit", but the idea is the same.
 
+For an example of this in action, and a good basis for hooking your own validation needs up to Sashay,
+see validator_data_typer_test.go. It includes a fully-functional example using go-validator style struct tags
+to inform data type fields.
+
 
 Sashay Detail- Responses
 
