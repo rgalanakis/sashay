@@ -22,7 +22,7 @@ func RegisterValidatorDataTypes(sa *sashay.Sashay) {
 	}
 }
 
-func ParseValidations(field sashay.Field, of sashay.ObjectFields)  {
+func ParseValidations(field sashay.Field, of sashay.ObjectFields) {
 	validations := strings.Split(field.StructField.Tag.Get("validate"), ",")
 	for _, v := range validations {
 		parts := strings.Split(v, "=")
@@ -70,11 +70,11 @@ var _ = Describe("ValidatorDataTyper", func() {
 			"/empty",
 			"",
 			struct {
-				MinmaxStr string `query:"minmaxstr" validate:"min=1,max=5"`
+				MinmaxStr string  `query:"minmaxstr" validate:"min=1,max=5"`
 				MinmaxNum float32 `query:"minmaxnum" validate:"min=1,max=5.5"`
-				Regexp string `query:"regexp" validate:"regexp=.*[wy](i|o)bble$"`
-				Len string `query:"len" validate:"len=4"`
-				Nonzero string `query:"nonzero" validate:"nonzero"`
+				Regexp    string  `query:"regexp" validate:"regexp=.*[wy](i|o)bble$"`
+				Len       string  `query:"len" validate:"len=4"`
+				Nonzero   string  `query:"nonzero" validate:"nonzero"`
 			}{},
 			nil,
 			nil,
