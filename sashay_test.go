@@ -999,4 +999,27 @@ info:
                   nullable: true
 `))
 	})
+
+	It("declares pointer fields in response types as nullable: true", func() {
+		type User struct {
+			Name *string `json:"name"`
+		}
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"",
+			nil,
+			User{},
+			nil,
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+          nullable: true
+`))
+	})
 })
