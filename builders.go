@@ -93,7 +93,10 @@ func (b *baseBuilder) writeRefSchema(indent int, f Field) {
 		b.writeLn(indent, "items:")
 		b.writeRefSchema(indent+1, ZeroSliceValueField(f.Type))
 	} else if f.Kind == reflect.Struct {
-		if b.swagger.isMappedToDataType(f) {
+		isEmptyStruct := f.Type.NumField() == 0
+		if isEmptyStruct {
+			b.writeLn(indent, "type: object")
+		} else if b.swagger.isMappedToDataType(f) {
 			b.writeDataType(indent, f)
 		} else {
 			b.writeLn(indent, "$ref: '%s'", schemaRefLink(f))

@@ -622,8 +622,12 @@ In this way, the default codes can be overwritten, and multiple responses can be
 				  schema:
 					$ref: '#/components/schemas/TeapotError'
 
-Finally, if a response is a string type, rather than a struct,
+Finally, there are a couple special cases for responses:
+
+- If a response is a string type, rather than a struct,
 it is assumed to be of content type text/plain.
+
+- If a response is an empty struct (`struct{}{}`), use application/json with no schema.
 
 Sashay Detail- Pointer Fields
 

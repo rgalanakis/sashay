@@ -331,6 +331,31 @@ security:
 `))
 	})
 
+	It("interprets empty structs as plain objects", func() {
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/plain",
+			"plain",
+			nil,
+			struct{}{},
+			""),
+		)
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /plain:
+    get:
+      operationId: getPlain
+      summary: plain
+      responses:
+        '200':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                type: object
+        'default':
+`))
+	})
+
 	It("generates paths with descriptions and tags", func() {
 		sw.Add(sashay.NewOperation(
 			"GET",
