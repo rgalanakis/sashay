@@ -945,47 +945,39 @@ info:
 `))
 	})
 
-	It("declares pointer fields in non-body parameters as required: false", func() {
-		sw.Add(sashay.NewOperation(
-			"GET",
-			"/users",
-			"Returns users.",
-			struct {
-				Pretty *bool `query:"pretty"`
-			}{},
-			nil,
-			nil,
-		))
-		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
-  /users:
-    get:
-      operationId: getUsers
-      summary: Returns users.
-      parameters:
-        - name: pretty
-          in: query
-          required: false
-          schema:
-            type: boolean
-`))
-	})
-
-	It("declares pointer fields in body parameters as nullable: true", func() {
+	It("treats pointer fields in parameters, body parameters, and responses the same as value fields", func() {
+		type User struct {
+			Name *string `json:"name"`
+		}
 		sw.Add(sashay.NewOperation(
 			"POST",
-			"/users",
-			"Returns users.",
+			"/users/:id",
+			"Update a user.",
 			struct {
-				Count *int `json:"count"`
+				ID     *int    `path:"id"`
+				Pretty *bool   `query:"pretty"`
+				Name   *string `json:"name"`
 			}{},
-			nil,
+			User{},
 			nil,
 		))
-		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
-  /users:
+		yaml := sw.BuildYAML()
+		Expect(yaml).To(ContainSubstring(`paths:
+  /users/{id}:
     post:
-      operationId: postUsers
-      summary: Returns users.
+      operationId: postUsersId
+      summary: Update a user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
       requestBody:
         required: true
         content:
@@ -993,33 +985,16 @@ info:
             schema:
               type: object
               properties:
-                count:
-                  type: integer
-                  format: int64
-                  nullable: true
+                name:
+                  type: string
 `))
-	})
-
-	It("declares pointer fields in response types as nullable: true", func() {
-		type User struct {
-			Name *string `json:"name"`
-		}
-		sw.Add(sashay.NewOperation(
-			"GET",
-			"/users",
-			"",
-			nil,
-			User{},
-			nil,
-		))
-		Expect(sw.BuildYAML()).To(ContainSubstring(`components:
+		Expect(yaml).To(HaveSuffix(`components:
   schemas:
     User:
       type: object
       properties:
         name:
           type: string
-          nullable: true
 `))
 	})
 })
