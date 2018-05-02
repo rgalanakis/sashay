@@ -621,5 +621,25 @@ In this way, the default codes can be overwritten, and multiple responses can be
 				application/json:
 				  schema:
 					$ref: '#/components/schemas/TeapotError'
+
+Sashay Detail- Pointer Fields
+
+Sashay treats value and pointer fields the same.
+In other words, *bool and bool will use the same data type/schema.
+When you register a data type (refer to DefineDataType),
+the same DataTyper is used for pointer fields of that type.
+
+Sashay support for pointer fields is minimal,
+because Swagger's support for nil fields is minimal.
+
+The primary use case for pointer fields in Go is to represent optional fields.
+There's nothing much for Sashay to do with that information,
+because both parameters and object fields are optional/not-required in Swagger by default.
+For example, in parameters, "required: false" is the default.
+And for schemas (request bodies, responses), the "nullable: true" attribute
+is quite semantically different than the "optional" meant by a Go pointer field.
+
+In the future, Sashay may support more more extensive specification around required fields,
+but not right now.
 */
 package sashay

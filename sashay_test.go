@@ -944,4 +944,57 @@ openapi: 3.0.0
 info:
 `))
 	})
+
+	It("treats pointer fields in parameters, body parameters, and responses the same as value fields", func() {
+		type User struct {
+			Name *string `json:"name"`
+		}
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/users/:id",
+			"Update a user.",
+			struct {
+				ID     *int    `path:"id"`
+				Pretty *bool   `query:"pretty"`
+				Name   *string `json:"name"`
+			}{},
+			User{},
+			nil,
+		))
+		yaml := sw.BuildYAML()
+		Expect(yaml).To(ContainSubstring(`paths:
+  /users/{id}:
+    post:
+      operationId: postUsersId
+      summary: Update a user.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: pretty
+          in: query
+          schema:
+            type: boolean
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+`))
+		Expect(yaml).To(HaveSuffix(`components:
+  schemas:
+    User:
+      type: object
+      properties:
+        name:
+          type: string
+`))
+	})
 })

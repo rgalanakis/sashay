@@ -45,9 +45,9 @@ type DataTyper func(f Field, of ObjectFields)
 
 // SimpleDataTyper returns a DataTyper that will specify a "type" field of type,
 // and a "format" field of format, if not empty.
-func SimpleDataTyper(f, format string) DataTyper {
-	return func(tvp Field, of ObjectFields) {
-		of["type"] = f
+func SimpleDataTyper(swaggerType, format string) DataTyper {
+	return func(f Field, of ObjectFields) {
+		of["type"] = swaggerType
 		if format != "" {
 			of["format"] = format
 		}
@@ -85,19 +85,19 @@ func noopDataTyper(_ Field, _ ObjectFields) {}
 func BuiltinDataTyperFor(value interface{}, chained ...DataTyper) DataTyper {
 	dt := noopDataTyper
 	switch value.(type) {
-	case int, int64:
+	case int, int64, *int, *int64:
 		dt = SimpleDataTyper("integer", "int64")
-	case int32:
+	case int32, *int32:
 		dt = SimpleDataTyper("integer", "int32")
-	case string:
+	case string, *string:
 		dt = SimpleDataTyper("string", "")
-	case bool:
+	case bool, *bool:
 		dt = SimpleDataTyper("boolean", "")
-	case float64:
+	case float64, *float64:
 		dt = SimpleDataTyper("number", "double")
-	case float32:
+	case float32, *float32:
 		dt = SimpleDataTyper("number", "float")
-	case time.Time:
+	case time.Time, *time.Time:
 		dt = SimpleDataTyper("string", "date-time")
 	}
 	typers := []DataTyper{dt, defaultDataTyper}

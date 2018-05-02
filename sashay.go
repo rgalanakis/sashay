@@ -182,8 +182,13 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 //
 // See https://swagger.io/specification/#dataTypes
 func (sa *Sashay) DefineDataType(i interface{}, dt DataTyper) {
-	tvp := NewField(i)
-	sa.dataTypesForTypes[tvp.Type] = dataTypeDef{tvp, dt}
+	f := NewField(i)
+	sa.dataTypesForTypes[f.Type] = dataTypeDef{f, dt}
+	if f.Kind != reflect.Ptr {
+		ptr := reflect.New(f.Type)
+		ptrF := NewField(ptr.Interface())
+		sa.dataTypesForTypes[ptrF.Type] = dataTypeDef{ptrF, dt}
+	}
 }
 
 func (sa *Sashay) WriteYAML(buf io.Writer) error {
