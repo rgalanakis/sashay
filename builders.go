@@ -225,7 +225,12 @@ func (b *pathBuilder) writePaths() {
 			b.writeLn(5, "description: %s", resp.Description)
 			if !resp.Field.Nil() {
 				b.writeLn(5, "content:")
-				b.writeLn(6, "%s:", contentType)
+				switch resp.Field.Kind {
+				case reflect.String:
+					b.writeLn(6, "text/plain:")
+				default:
+					b.writeLn(6, "%s:", contentType)
+				}
 				b.writeLn(7, "schema:")
 				b.base.writeRefSchema(8, resp.Field)
 			}

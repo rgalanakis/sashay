@@ -301,6 +301,36 @@ security:
 `))
 	})
 
+	It("interprets string responses as text/plain", func() {
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/plain",
+			"plain",
+			nil,
+			sashay.NewResponse(200, "desc", ""),
+			""),
+		)
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /plain:
+    get:
+      operationId: getPlain
+      summary: plain
+      responses:
+        '200':
+          description: desc
+          content:
+            text/plain:
+              schema:
+                type: string
+        'default':
+          description: error response
+          content:
+            text/plain:
+              schema:
+                type: string
+`))
+	})
+
 	It("generates paths with descriptions and tags", func() {
 		sw.Add(sashay.NewOperation(
 			"GET",

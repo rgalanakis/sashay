@@ -622,6 +622,9 @@ In this way, the default codes can be overwritten, and multiple responses can be
 				  schema:
 					$ref: '#/components/schemas/TeapotError'
 
+Finally, if a response is a string type, rather than a struct,
+it is assumed to be of content type text/plain.
+
 Sashay Detail- Pointer Fields
 
 Sashay treats value and pointer fields the same.
