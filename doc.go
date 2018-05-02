@@ -624,11 +624,13 @@ In this way, the default codes can be overwritten, and multiple responses can be
 
 Sashay Detail- Pointer Fields
 
-Sashay support for pointer fields is minimal,
-because Swagger's support for nil fields is minimal.
-
 Sashay treats value and pointer fields the same.
 In other words, *bool and bool will use the same data type/schema.
+When you register a data type (refer to DefineDataType),
+the same DataTyper is used for pointer fields of that type.
+
+Sashay support for pointer fields is minimal,
+because Swagger's support for nil fields is minimal.
 
 The primary use case for pointer fields in Go is to represent optional fields.
 There's nothing much for Sashay to do with that information,
@@ -639,7 +641,5 @@ is quite semantically different than the "optional" meant by a Go pointer field.
 
 In the future, Sashay may support more more extensive specification around required fields,
 but not right now.
-
-Users who register their own data typers should make sure to register both the plain value and pointer value.
 */
 package sashay
