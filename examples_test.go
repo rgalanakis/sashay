@@ -359,3 +359,34 @@ func ExampleCustomDataType() {
 	//           description: error response
 
 }
+
+func ExampleSelectMap() {
+	sw := sashay.New("t", "d", "v")
+	// We can remove "/internal" routes
+	sw.Add(sashay.NewOperation("GET", "/internal/users", "", nil, nil, nil))
+	// And lowercase all paths
+	sw.Add(sashay.NewOperation("GET", "/USeRS", "", nil, nil, nil))
+	result := sashay.SelectMap(sw, func(op sashay.Operation) *sashay.Operation {
+		if strings.Contains(op.Path, "/internal") {
+			return nil
+		}
+		op.Path = strings.ToLower(op.Path)
+		return &op
+	})
+	fmt.Println(result.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /users:
+	//     get:
+	//       operationId: getUsers
+	//       responses:
+	//         '204':
+	//           description: The operation completed successfully.
+	//         'default':
+	//           description: error response
+}
