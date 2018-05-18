@@ -5,7 +5,7 @@ import (
 	"github.com/rgalanakis/sashay"
 )
 
-func ExampleReadme() {
+func Example_readme() {
 	type Pet struct {
 		ID   int    `json:"id"`
 		Name string `json:"name"`

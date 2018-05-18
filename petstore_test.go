@@ -129,7 +129,7 @@ var routes = []Route{
 	},
 }
 
-func ExamplePetstore() {
+func Example_petstore() {
 	sw := PetStoreSwagger()
 	RegisterRoutes(&FrameworkRouter{}, sw)
 	fmt.Println(sw.BuildYAML())

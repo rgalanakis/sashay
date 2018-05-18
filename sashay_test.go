@@ -1052,4 +1052,36 @@ info:
           type: string
 `))
 	})
+
+	It("can create a new registry by filtering/mapping operations", func() {
+		sw.DefaultContentType = "application/xml"
+		sw.AddServer("server.com", "the server")
+		sw.Add(sashay.NewOperation("GET", "/internal/users", "", nil, nil, nil))
+		sw.Add(sashay.NewOperation("GET", "/users", "", nil, nil, nil))
+		result := sashay.SelectMap(sw, func(op sashay.Operation) *sashay.Operation {
+			if strings.Contains(op.Path, "/internal") {
+				return nil
+			}
+			op.Path = "/v3" + op.Path
+			return &op
+		})
+		Expect(result.BuildYAML()).To(ContainSubstring(`openapi: 3.0.0
+info:
+  title: SwaggerGenAPI
+  description: Demonstrate auto-generating Swagger
+  version: 0.1.9
+servers:
+  - url: server.com
+    description: the server
+paths:
+  /v3/users:
+    get:
+      operationId: getV3Users
+      responses:
+        '204':
+          description: The operation completed successfully.
+        'default':
+          description: error response
+`))
+	})
 })

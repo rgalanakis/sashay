@@ -1,14 +1,16 @@
 package sashay_test
 
 import (
+	"encoding/json"
 	"fmt"
+	"net/http"
 	"strings"
 	"time"
 
 	"github.com/rgalanakis/sashay"
 )
 
-func ExampleParameters() {
+func ExampleSashay_basicParameters() {
 	sw := sashay.New("t", "d", "v")
 	op := sashay.NewOperation(
 		"POST",
@@ -70,39 +72,40 @@ func ExampleParameters() {
 	//           description: error response
 }
 
-func ExampleUsableParams() {
-	//sw := sashay.New("t", "d", "v")
-	//router := echo.New()
-	//
-	//type getUsersParams struct {
-	//	Status string `query:"status" validate:"eq=active|eq=deleted"`
-	//}
-	//getUsersOp := sashay.NewOperation(
-	//	"GET",
-	//	"/users",
-	//	"Get users",
-	//	getUsersParams{},
-	//	[]User{},
-	//	ErrorModel{},
-	//)
-	//getUsersHandler := func(c echo.Context) error {
-	//	params := getUsersParams{}
-	//	if err := c.Bind(&params); err != nil {
-	//		return err
-	//	}
-	//	if err := c.Validate(params); err != nil {
-	//		return err
-	//	}
-	//	var users []User
-	//	// Logic to get users
-	//	return c.JSON(200, users)
-	//}
-	//
-	//sw.Add(getUsersOp)
-	//router.Add(getUsersOp.Method, getUsersOp.Path, getUsersHandler)
+func validate(_ interface{}) error { return nil }
+
+func ExampleSashay_usableParams() {
+	sw := sashay.New("t", "d", "v")
+
+	type getUsersParams struct {
+		Status string `query:"status" validate:"eq=active|eq=deleted"`
+	}
+	getUsersOp := sashay.NewOperation(
+		"GET",
+		"/users",
+		"Get users",
+		getUsersParams{},
+		[]User{},
+		ErrorModel{},
+	)
+	getUsersHandler := func(w http.ResponseWriter, r *http.Request) {
+		params := getUsersParams{Status: r.URL.Query().Get("status")}
+		if err := validate(params); err != nil {
+			w.WriteHeader(500)
+		} else {
+			var users []User
+			// Logic to get users
+			bytes, _ := json.Marshal(users)
+			w.Write(bytes)
+			w.WriteHeader(200)
+		}
+	}
+
+	sw.Add(getUsersOp)
+	http.HandleFunc(getUsersOp.Path, getUsersHandler)
 }
 
-func ExampleNestedParams() {
+func ExampleSashay_nestedParams() {
 	sw := sashay.New("t", "d", "v")
 	op := sashay.NewOperation(
 		"POST",
@@ -151,7 +154,7 @@ func ExampleNestedParams() {
 	//           description: error response
 }
 
-func ExampleBasicResponse() {
+func ExampleSashay_basicResponse() {
 	sw := sashay.New("t", "d", "v")
 	op := sashay.NewOperation(
 		"GET",
@@ -214,7 +217,7 @@ func ExampleBasicResponse() {
 	//               type: string
 }
 
-func ExampleAdvancedResponses() {
+func ExampleSashay_advancedResponses() {
 	sw := sashay.New("t", "d", "v")
 
 	type TeapotResponse struct {
@@ -283,7 +286,7 @@ func ExampleAdvancedResponses() {
 	//           format: double
 }
 
-func ExampleCustomDataType() {
+func ExampleSashay_customDataType() {
 	sw := sashay.New("t", "d", "v")
 
 	type UnitOfTime struct {
@@ -358,4 +361,35 @@ func ExampleCustomDataType() {
 	//         'default':
 	//           description: error response
 
+}
+
+func ExampleSelectMap() {
+	sw := sashay.New("t", "d", "v")
+	// We can remove "/internal" routes
+	sw.Add(sashay.NewOperation("GET", "/internal/users", "", nil, nil, nil))
+	// And lowercase all paths
+	sw.Add(sashay.NewOperation("GET", "/USeRS", "", nil, nil, nil))
+	result := sashay.SelectMap(sw, func(op sashay.Operation) *sashay.Operation {
+		if strings.Contains(op.Path, "/internal") {
+			return nil
+		}
+		op.Path = strings.ToLower(op.Path)
+		return &op
+	})
+	fmt.Println(result.BuildYAML())
+	// Output:
+	// openapi: 3.0.0
+	// info:
+	//   title: t
+	//   description: d
+	//   version: v
+	// paths:
+	//   /users:
+	//     get:
+	//       operationId: getUsers
+	//       responses:
+	//         '204':
+	//           description: The operation completed successfully.
+	//         'default':
+	//           description: error response
 }

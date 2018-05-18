@@ -287,3 +287,43 @@ func isExportedName(s string) bool {
 func schemaRefLink(tvp Field) string {
 	return fmt.Sprintf("#/components/schemas/%s", tvp.Type.Name())
 }
+
+// SelectMap is used to process a source Sashay registry into an alternative version,
+// like for removing Operations/endpoints matching a certain criteria.
+// A new registry is returned with all the values copied from source; the source registry is not modified.
+//
+// fn is a function which takes the Operation being considered,
+// and returns nil if the Operation should be excluded,
+// or a pointer to the Operation if it should remain in the registry.
+// Note that fn can modify the input Operation and those changes will be reflected into the resulting Sashay instance.
+func SelectMap(source *Sashay, fn func(op Operation) *Operation) *Sashay {
+	dest := Sashay{
+		DefaultContentType: source.DefaultContentType,
+		title:              source.title,
+		desc:               source.desc,
+		version:            source.version,
+		tos:                source.tos,
+		contactName:        source.contactName,
+		contactURL:         source.contactURL,
+		contactEmail:       source.contactEmail,
+		licenseName:        source.licenseName,
+		licenseURL:         source.licenseURL,
+	}
+	dest.servers = make([]swaggerServer, len(source.servers))
+	copy(dest.servers, source.servers)
+	dest.securities = make([]swaggerSecurity, len(source.securities))
+	copy(dest.securities, source.securities)
+	dest.tags = make([]swaggerTag, len(source.tags))
+	copy(dest.tags, source.tags)
+	dest.dataTypesForTypes = make(map[reflect.Type]dataTypeDef, len(source.dataTypesForTypes))
+	for k, v := range source.dataTypesForTypes {
+		dest.dataTypesForTypes[k] = v
+	}
+	dest.operations = make([]internalOperation, 0, len(source.operations))
+	for _, op := range source.operations {
+		if newOp := fn(op.Original); newOp != nil {
+			dest.Add(*newOp)
+		}
+	}
+	return &dest
+}

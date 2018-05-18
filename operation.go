@@ -47,6 +47,7 @@ func (op Operation) AddTags(tags ...string) Operation {
 
 func (op Operation) toInternalOperation() internalOperation {
 	return internalOperation{
+		op,
 		NewMethod(op.Method),
 		NewPath(op.Path),
 		NewOperationID(op),
@@ -184,6 +185,7 @@ var operationIDPathClean = regexp.MustCompile("[^A-Za-z0-9_]")
 // internalOperation wraps stuff in Field and Responses so we don't have to do it inline,
 // and can use consistent interfaces in our internal code.
 type internalOperation struct {
+	Original    Operation
 	Method      Method
 	Path        Path
 	OperationID OperationID
