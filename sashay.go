@@ -232,15 +232,6 @@ func (sa *Sashay) isMappedToDataType(f Field) bool {
 	return found
 }
 
-// A type will end up in the schema if it has a name and is exported.
-// No name is anonymous, so much be traversed. Assume lowercase named isn't meant for the swagger doc.
-func isTypeForSchema(t reflect.Type) bool {
-	if t.Name() == "" {
-		return false
-	}
-	return isExportedName(t.Name())
-}
-
 // Assuming field.Type is a struct, enumerate all the exported fields as Fields.
 func enumerateStructFields(field Field) Fields {
 	result := make(Fields, 0)

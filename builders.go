@@ -50,7 +50,10 @@ func (b *baseBuilder) writeDataType(indent int, f Field) {
 	}
 }
 
-func (b *baseBuilder) writeStructSchema(indent int, f Field) {
+// Write struct f and all its fields recursively.
+// If recurse returns true for a struct field, call writeStructSchema on it.
+// If it doesn't, write the field as concrete ($ref for data type).
+func (b *baseBuilder) writeStructSchema(indent int, f Field, recurse func(Field) bool) {
 	b.writeLn(indent, "type: object")
 	writeProps := b.writeOnce(indent, "properties:")
 	for _, field := range enumerateStructFields(f) {
@@ -61,10 +64,10 @@ func (b *baseBuilder) writeStructSchema(indent int, f Field) {
 		writeProps()
 		if field.Kind == reflect.Struct {
 			b.writeLn(indent+1, "%s:", fieldJSONName)
-			if isTypeForSchema(field.Type) {
-				b.writeRefSchema(indent+2, field)
+			if recurse(field) {
+				b.writeStructSchema(indent+2, field, recurse)
 			} else {
-				b.writeStructSchema(indent+2, field)
+				b.writeRefSchema(indent+2, field)
 			}
 		} else if field.Kind == reflect.Slice {
 			b.writeLn(indent+1, "%s:", fieldJSONName)
@@ -72,10 +75,10 @@ func (b *baseBuilder) writeStructSchema(indent int, f Field) {
 			b.writeLn(indent+2, "items:")
 			sliceField := ZeroSliceValueField(field.Type)
 			if sliceField.Kind == reflect.Struct {
-				if isTypeForSchema(sliceField.Type) {
-					b.writeRefSchema(indent+3, sliceField)
+				if recurse(sliceField) {
+					b.writeStructSchema(indent+3, sliceField, recurse)
 				} else {
-					b.writeStructSchema(indent+3, sliceField)
+					b.writeRefSchema(indent+3, sliceField)
 				}
 			} else {
 				b.writeDataType(indent+3, sliceField)
@@ -220,7 +223,11 @@ func (b *pathBuilder) writePaths() {
 			b.writeLn(4, "content:")
 			b.writeLn(5, "%s:", contentType)
 			b.writeLn(6, "schema:")
-			b.base.writeStructSchema(7, op.Params)
+			b.base.writeStructSchema(7, op.Params, func(f Field) bool {
+				// We *always* want to recurse/expand request body struct fields that are structs/slices,
+				// unless they are being terminated into a data type.
+				return !b.base.swagger.isMappedToDataType(f)
+			})
 		}
 		b.writeLn(3, "responses:")
 		for _, resp := range op.Responses {
@@ -323,8 +330,18 @@ func (b *componentsBuilder) writeSchemas(sortedSchemas Fields) {
 	b.base.writeLn(1, "schemas:")
 	for _, tv := range sortedSchemas {
 		b.base.writeLn(2, "%s:", tv.Type.Name())
-		b.base.writeStructSchema(3, tv)
+		b.base.writeStructSchema(3, tv, b.shouldRecurseStructField)
 	}
+}
+
+// A type will end up in the schema if it has a name and is exported.
+// No name is anonymous, so must be traversed.
+// Assume lowercase named isn't meant for the swagger doc.
+func (b *componentsBuilder) shouldRecurseStructField(f Field) bool {
+	if f.Type.Name() == "" {
+		return true
+	}
+	return !isExportedName(f.Type.Name())
 }
 
 // Each struct type should be in the map only once,

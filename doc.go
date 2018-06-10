@@ -343,6 +343,10 @@ The actual getUsersHandler code uses the same struct to describe itself as it do
 The same is true for response types- the schema is built from the real objects, with the json struct tags,
 not separate documentation.
 
+Note that Sashay never uses $ref for parameters (resources in POST/PUT request bodies).
+Even if the same type is used for a request and a response,
+it'll be expanded in the requestBody section and a $ref in the response section.
+This may change in the future.
 
 Sashay Detail- Request Bodies
 
