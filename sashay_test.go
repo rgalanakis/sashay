@@ -1085,6 +1085,63 @@ components:
 `))
 	})
 
+	It("expands fields of parameters (do not use $ref)", func() {
+		type Address struct {
+			Address1 string `json:"address1"`
+			State    string `json:"state"`
+		}
+		type User struct {
+			Name    string  `json:"name"`
+			Address Address `json:"address"`
+			OldAddresses []Address `json:"oldAddresses"`
+		}
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/users",
+			"Create a user.",
+			User{},
+			nil,
+			nil,
+		))
+		yaml := sw.BuildYAML()
+		Expect(yaml).To(HaveSuffix(`paths:
+  /users:
+    post:
+      operationId: postUsers
+      summary: Create a user.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                address:
+                  type: object
+                  properties:
+                    address1:
+                      type: string
+                    state:
+                      type: string
+                oldAddresses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address1:
+                        type: string
+                      state:
+                        type: string
+      responses:
+        '204':
+          description: The operation completed successfully.
+        'default':
+          description: error response
+`))
+	})
+
 	It("can create a new registry by filtering/mapping operations", func() {
 		sw.DefaultContentType = "application/xml"
 		sw.AddServer("server.com", "the server")
