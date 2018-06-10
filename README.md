@@ -186,10 +186,3 @@ components:
 See the [documentation at godoc.org](https://godoc.org/github.com/rgalanakis/sashay)
 for more information and tutorials about how to use Sashay.
 See [https://swagger.io/specification/](https://swagger.io/specification/) for more info about the spec.
-
-# Upcoming
-
-- Add example custom type parser for https://github.com/go-validator/validator.
-  Will probably require establishing "default" DataTypers,
-  so that extenders can call the original.
-- Add example registration helper for Echo and Chi.
