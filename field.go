@@ -25,27 +25,36 @@ type Field struct {
 }
 
 // NewField returns a Field initialized from v.
-// If field is provided, indicate the Field was parsed from a StructField.
-func NewField(v interface{}, field ...reflect.StructField) Field {
+// If fields is provided, its first item indicates the Field was parsed from a StructField.
+func NewField(v interface{}, fields ...reflect.StructField) Field {
 	if v == nil {
 		return Field{}
 	}
-	f := reflect.StructField{}
-	hasStructField := false
-	if len(field) > 0 {
-		f = field[0]
-		hasStructField = true
+	var structField *reflect.StructField
+	if len(fields) > 0 {
+		structField = &fields[0]
 	}
+	return newField(v, true, structField)
+}
+
+func newField(v interface{}, deference bool, field *reflect.StructField) Field {
 	t := reflect.TypeOf(v)
-	return Field{
-		v,
-		t,
-		t.Kind(),
-		reflect.ValueOf(v),
-		nil,
-		f,
-		hasStructField,
+	k := t.Kind()
+	if deference && k == reflect.Ptr {
+		t = t.Elem()
+		k = t.Kind()
 	}
+	result := Field{
+		Interface: v,
+		Type:      t,
+		Kind:      k,
+		Value:     reflect.ValueOf(v),
+	}
+	if field != nil {
+		result.StructField = *field
+		result.FromStructField = true
+	}
+	return result
 }
 
 // Return true if f was created from nil.

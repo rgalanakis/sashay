@@ -185,7 +185,7 @@ func (sa *Sashay) DefineDataType(i interface{}, dt DataTyper) {
 	sa.dataTypesForTypes[f.Type] = dataTypeDef{f, dt}
 	if f.Kind != reflect.Ptr {
 		ptr := reflect.New(f.Type)
-		ptrF := NewField(ptr.Interface())
+		ptrF := newField(ptr.Interface(), false, nil)
 		sa.dataTypesForTypes[ptrF.Type] = dataTypeDef{ptrF, dt}
 	}
 }

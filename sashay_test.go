@@ -1001,23 +1001,31 @@ info:
 	})
 
 	It("treats pointer fields in parameters, body parameters, and responses the same as value fields", func() {
+		type addressParam struct {
+			Address1 string `json:"address1"`
+			State    string `json:"state"`
+		}
 		type User struct {
 			Name *string `json:"name"`
+		}
+		type Response struct {
+			Users *[]User `json:"users"`
 		}
 		sw.Add(sashay.NewOperation(
 			"POST",
 			"/users/:id",
 			"Update a user.",
 			struct {
-				ID     *int    `path:"id"`
-				Pretty *bool   `query:"pretty"`
-				Name   *string `json:"name"`
+				ID        *int            `path:"id"`
+				Pretty    *bool           `query:"pretty"`
+				Name      *string         `json:"name"`
+				Addresses *[]addressParam `json:"addresses"`
 			}{},
-			User{},
+			Response{},
 			nil,
 		))
 		yaml := sw.BuildYAML()
-		Expect(yaml).To(ContainSubstring(`paths:
+		Expect(yaml).To(HaveSuffix(`paths:
   /users/{id}:
     post:
       operationId: postUsersId
@@ -1042,9 +1050,33 @@ info:
               properties:
                 name:
                   type: string
-`))
-		Expect(yaml).To(HaveSuffix(`components:
+                addresses:
+                  type: array
+                  items:
+                    type: object
+                    properties:
+                      address1:
+                        type: string
+                      state:
+                        type: string
+      responses:
+        '201':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Response'
+        'default':
+          description: error response
+components:
   schemas:
+    Response:
+      type: object
+      properties:
+        users:
+          type: array
+          items:
+            $ref: '#/components/schemas/User'
     User:
       type: object
       properties:
