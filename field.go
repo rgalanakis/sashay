@@ -71,22 +71,22 @@ func ZeroSliceValueField(t reflect.Type) Field {
 // Fields is a slice of Field instances.
 type Fields []Field
 
-func (t Fields) Len() int {
-	return len(t)
+func (fs Fields) Len() int {
+	return len(fs)
 }
 
-func (t Fields) Less(i, j int) bool {
-	return t[i].Type.Name() < t[j].Type.Name()
+func (fs Fields) Less(i, j int) bool {
+	return fs[i].Type.Name() < fs[j].Type.Name()
 }
 
-func (t Fields) Swap(i, j int) {
-	t[i], t[j] = t[j], t[i]
+func (fs Fields) Swap(i, j int) {
+	fs[i], fs[j] = fs[j], fs[i]
 }
 
 // Compact returns a new Fields with Nil values removed.
-func (t Fields) Compact() Fields {
-	res := make(Fields, 0, len(t))
-	for _, p := range t {
+func (fs Fields) Compact() Fields {
+	res := make(Fields, 0, len(fs))
+	for _, p := range fs {
 		if !p.Nil() {
 			res = append(res, p)
 		}
@@ -96,23 +96,23 @@ func (t Fields) Compact() Fields {
 
 // FlattenSliceTypes replaces Fields with slice types with their underlying value
 // (see ZeroSliceTypeField).
-func (t Fields) FlattenSliceTypes() Fields {
-	res := make(Fields, 0, len(t))
-	for _, tvp := range t {
-		if tvp.Type.Kind() == reflect.Slice {
-			res = append(res, ZeroSliceValueField(tvp.Type))
+func (fs Fields) FlattenSliceTypes() Fields {
+	res := make(Fields, 0, len(fs))
+	for _, f := range fs {
+		if f.Type.Kind() == reflect.Slice {
+			res = append(res, ZeroSliceValueField(f.Type))
 		} else {
-			res = append(res, tvp)
+			res = append(res, f)
 		}
 	}
 	return res
 }
 
 // Distinct eliminates Fields with the same Type.
-func (t Fields) Distinct() Fields {
-	res := make(Fields, 0, len(t))
-	seen := make(map[reflect.Type]bool, len(t))
-	for _, p := range t {
+func (fs Fields) Distinct() Fields {
+	res := make(Fields, 0, len(fs))
+	seen := make(map[reflect.Type]bool, len(fs))
+	for _, p := range fs {
 		if found := seen[p.Type]; !found {
 			seen[p.Type] = true
 			res = append(res, p)
@@ -122,11 +122,11 @@ func (t Fields) Distinct() Fields {
 }
 
 // RemoveAnonymousTypes removes Fields that have no PkgPath, such as anonymous types.
-func (t Fields) RemoveAnonymousTypes() Fields {
-	res := make(Fields, 0, len(t))
-	for _, tvp := range t {
-		if tvp.Type.PkgPath() != "" {
-			res = append(res, tvp)
+func (fs Fields) RemoveAnonymousTypes() Fields {
+	res := make(Fields, 0, len(fs))
+	for _, f := range fs {
+		if f.Type.PkgPath() != "" {
+			res = append(res, f)
 		}
 	}
 	return res

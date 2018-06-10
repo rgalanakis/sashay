@@ -167,12 +167,11 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 // Callers can use DefineDataType(myStruct{}, provide define their own DataTyper for structs that they.
 // They can use SimpleDataTyper, or provide a function with dynamic logic for what fields to add:
 //
-//     sw.DefineDataType(FormattableString{}, func(tvp Field) ObjectFields {
-//       res := ObjectFields{"type": "string"}
-//       if val, ok := tvp.StructField.Tag.Lookup("format"); ok {
-//         res["format"] = val
+//     sw.DefineDataType(FormattableString{}, func(f Field, of ObjectFields) {
+//       of["type"] = "string"
+//       if val, ok := f.StructField.Tag.Lookup("format"); ok {
+//         of["format"] = val
 //       }
-//		 return res
 //     })
 //
 // The DataTyper above will be called for any struct field with a type of FormattableString,
@@ -222,14 +221,14 @@ func (sa *Sashay) WriteYAMLFile(filename string) error {
 	return sa.WriteYAML(f)
 }
 
-func (sa *Sashay) dataTypeDefFor(tvp Field) (dataTypeDef, bool) {
-	dtd, ok := sa.dataTypesForTypes[tvp.Type]
+func (sa *Sashay) dataTypeDefFor(f Field) (dataTypeDef, bool) {
+	dtd, ok := sa.dataTypesForTypes[f.Type]
 	return dtd, ok
 }
 
 // Return true if a Go struct type is mapped to a data type (like time.Time is mapped to string).
-func (sa *Sashay) isMappedToDataType(tvp Field) bool {
-	_, found := sa.dataTypesForTypes[tvp.Type]
+func (sa *Sashay) isMappedToDataType(f Field) bool {
+	_, found := sa.dataTypesForTypes[f.Type]
 	return found
 }
 
@@ -242,21 +241,20 @@ func isTypeForSchema(t reflect.Type) bool {
 	return isExportedName(t.Name())
 }
 
-// Assuming tvp.Type is a struct, enumerate all the exported fields as Fields.
-func enumerateStructFields(tvp Field) Fields {
+// Assuming field.Type is a struct, enumerate all the exported fields as Fields.
+func enumerateStructFields(field Field) Fields {
 	result := make(Fields, 0)
-	for i := 0; i < tvp.Type.NumField(); i++ {
-		fieldDef := tvp.Type.Field(i)
+	for i := 0; i < field.Type.NumField(); i++ {
+		fieldDef := field.Type.Field(i)
 		if !isExportedField(fieldDef) {
 			continue
 		}
-		getterField := tvp.Value.FieldByName(fieldDef.Name)
+		getterField := field.Value.FieldByName(fieldDef.Name)
 		if !getterField.CanInterface() {
-			panic(fmt.Sprintf("Cannot get value of unexported field: %s %s", tvp.Type.Name(), fieldDef.Name))
+			panic(fmt.Sprintf("Cannot get value of unexported field: %s %s", field.Type.Name(), fieldDef.Name))
 		}
 		val := getterField.Interface()
-		tvp := NewField(val, fieldDef)
-		result = append(result, tvp)
+		result = append(result, NewField(val, fieldDef))
 	}
 	return result
 }
@@ -284,8 +282,8 @@ func isExportedName(s string) bool {
 }
 
 // Return the link for a $ref field, like "#/components/schemas/User".
-func schemaRefLink(tvp Field) string {
-	return fmt.Sprintf("#/components/schemas/%s", tvp.Type.Name())
+func schemaRefLink(f Field) string {
+	return fmt.Sprintf("#/components/schemas/%s", f.Type.Name())
 }
 
 // SelectMap is used to process a source Sashay registry into an alternative version,
