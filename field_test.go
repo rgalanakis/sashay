@@ -2,6 +2,8 @@ package sashay_test
 
 import (
 	"fmt"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/rgalanakis/sashay"
 	"reflect"
 )
@@ -21,3 +23,22 @@ func ExampleZeroSliceValueField() {
 	// userField type name: sashay_test.User
 	// zeroSliceField type name: sashay_test.User
 }
+
+var _ = Describe("Field", func() {
+	It("can render itself as a string", func() {
+		f := sashay.NewField(5)
+		Expect(f.String()).To(Equal("Field{kind: int, type:int}"))
+	})
+})
+
+var _ = Describe("Fields", func() {
+	Describe("FlattenSliceTypes", func() {
+		It("replaces Fields with slice types with their underlying value", func() {
+			intField := sashay.NewField(5)
+			strSliceField := sashay.NewField([]string{})
+			flattened := sashay.Fields{intField, strSliceField}.FlattenSliceTypes()
+			Expect(flattened[0].Kind.String()).To(Equal(reflect.Int.String()))
+			Expect(flattened[1].Kind.String()).To(Equal(reflect.String.String()))
+		})
+	})
+})

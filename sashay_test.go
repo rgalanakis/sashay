@@ -1,14 +1,13 @@
 package sashay_test
 
 import (
+	"bytes"
+	"io/ioutil"
+	"math/rand"
+	"os"
 	"strings"
 	"testing"
-
 	"time"
-
-	"bytes"
-
-	"math/rand"
 
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -1091,8 +1090,8 @@ components:
 			State    string `json:"state"`
 		}
 		type User struct {
-			Name    string  `json:"name"`
-			Address Address `json:"address"`
+			Name         string    `json:"name"`
+			Address      Address   `json:"address"`
 			OldAddresses []Address `json:"oldAddresses"`
 		}
 		sw.Add(sashay.NewOperation(
@@ -1172,5 +1171,15 @@ paths:
         'default':
           description: error response
 `))
+	})
+
+	It("writes to a file", func() {
+		f, err := ioutil.TempFile("", "sashay")
+		Expect(err).To(Not(HaveOccurred()))
+		defer os.Remove(f.Name())
+		sw.WriteYAMLFile(f.Name())
+
+		contents, err := ioutil.ReadFile(f.Name())
+		Expect(string(contents)).To(ContainSubstring("SwaggerGenAPI"))
 	})
 })
