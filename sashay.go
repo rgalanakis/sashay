@@ -242,7 +242,8 @@ func enumerateStructFields(field Field) Fields {
 		}
 		getterField := field.Value.FieldByName(fieldDef.Name)
 		if !getterField.CanInterface() {
-			panic(fmt.Sprintf("Cannot get value of unexported field: %s %s", field.Type.Name(), fieldDef.Name))
+			// Code should not get here, since we check for exported fields above.
+			panicWithFileBug("Cannot get value of unexported field %s type %s.", fieldDef.Name, field.Type.Name())
 		}
 		val := getterField.Interface()
 		result = append(result, NewField(val, fieldDef))
@@ -253,6 +254,7 @@ func enumerateStructFields(field Field) Fields {
 // Return true if f is exported.
 // Anonymous structs and those with no name are exported/meant for Swagger.
 func isExportedField(f reflect.StructField) bool {
+	// I don't know if empty string fields could occur in the wild but let's guard against it.
 	if f.Name == "" || f.Anonymous {
 		return true
 	}
@@ -264,7 +266,9 @@ func isExportedField(f reflect.StructField) bool {
 // The empty string is ambiguous and this method will panic if called with it.
 func isExportedName(s string) bool {
 	if s == "" {
-		panic("isExportedName cannot be used with an empty string, it is ambiguous. Front it with something else.")
+		// We make sure to never call this with an empty string but let's make the error message clear
+		// if somehow that happens.
+		panicWithFileBug("isExportedName cannot be used with an empty string, it is ambiguous.")
 	}
 	parts := strings.Split(s, ".")
 	typename := parts[len(parts)-1]
@@ -315,4 +319,13 @@ func SelectMap(source *Sashay, fn func(op Operation) *Operation) *Sashay {
 		}
 	}
 	return &dest
+}
+
+const fileBugBasePanicMsg = "This should not occur in the wild. " +
+	"Please file a bug at https://github.com/rgalanakis/sashay/issues/new " +
+	"with as much reproduction information as possible, " +
+	"including its definition, and the definition of the type/s using it for a field."
+
+func panicWithFileBug(tmpl string, args ...interface{}) {
+	panic(fmt.Sprintf(tmpl, args...) + " " + fileBugBasePanicMsg)
 }

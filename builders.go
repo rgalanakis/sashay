@@ -41,7 +41,9 @@ func (b *baseBuilder) writeNotEmpty(indent int, format string, s string) {
 func (b *baseBuilder) writeDataType(indent int, f Field) {
 	dataTypeDef, found := b.swagger.dataTypeDefFor(f)
 	if !found {
-		panic("no dataTypeDef defined for kind " + f.Kind.String() + " type " + f.Type.String())
+		// This will likely occur in the wild and indicate some sort of bug,
+		// but I don't know how to repro it or I'd fix the bug :)
+		panicWithFileBug("No dataTypeDef defined for kind %s, type %s.", f.Kind.String(), f.Type.String())
 	}
 	objectFields := ObjectFields{}
 	dataTypeDef.DataTyper(f, objectFields)
@@ -57,7 +59,7 @@ func (b *baseBuilder) writeStructSchema(indent int, f Field, recurse func(Field)
 	b.writeLn(indent, "type: object")
 	writeProps := b.writeOnce(indent, "properties:")
 	for _, field := range enumerateStructFields(f) {
-		fieldJSONName := b.jsonName(field.StructField)
+		fieldJSONName := jsonName(field.StructField)
 		if fieldJSONName == "" {
 			continue
 		}
@@ -114,7 +116,7 @@ func (b *baseBuilder) writeRefSchema(indent int, f Field) {
 // like ReturnErr/ReturnOK values, or Params values when it is meant for the request body.
 // Recall that Params can be parsed from query/header/path as well,
 // this _only_ returns the json tag name.
-func (b *baseBuilder) jsonName(f reflect.StructField) string {
+func jsonName(f reflect.StructField) string {
 	jsonTag := f.Tag.Get("json")
 	if jsonTag != "-" {
 		parts := strings.Split(jsonTag, ",")

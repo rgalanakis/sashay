@@ -2,6 +2,8 @@ package sashay_test
 
 import (
 	"fmt"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 	"github.com/rgalanakis/sashay"
 )
 
@@ -26,3 +28,15 @@ func ExampleChainDataTyper() {
 	// Output:
 	// Type: string Format: format2
 }
+
+var _ = Describe("Data typing", func() {
+	Describe("BuiltinDataTyperFor", func() {
+		It("uses the noop typer for a non-builtin type", func() {
+			type T struct{}
+			dt := sashay.BuiltinDataTyperFor(T{})
+			of := sashay.ObjectFields{}
+			dt(sashay.Field{}, of)
+			Expect(of).To(BeEmpty())
+		})
+	})
+})

@@ -66,7 +66,7 @@ func (f Field) String() string {
 	if f.Nil() {
 		return "Field{}"
 	}
-	return "Field{" + f.Kind.String() + "-" + f.Type.Name() + "}"
+	return "Field{kind: " + f.Kind.String() + ", type:" + f.Type.Name() + "}"
 }
 
 // For a reflect.Type for a slice, return a Field representing an item of the slice's underlying type.
