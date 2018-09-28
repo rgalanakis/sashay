@@ -1043,6 +1043,53 @@ security:
 `))
 	})
 
+	It("handles custom data types that derive simple kinds", func() {
+		type MyInt int
+		type myString string
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/stuff",
+			"Updates stuff.",
+			struct {
+				MyInt    MyInt    `json:"myInt"`
+				MyString myString `json:"myString"`
+			}{},
+			nil,
+			nil,
+		))
+		yaml := sw.BuildYAML()
+		Expect(yaml).To(ContainSubstring(`requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                myInt:
+                  type: integer
+                  format: int64
+                myString:
+                  type: string
+`))
+	})
+
+	It("panics if given an unsupported type", func() {
+		type Custom struct{}
+		sw.Add(sashay.NewOperation(
+			"POST",
+			"/stuff",
+			"Updates stuff.",
+			struct {
+				Custom ***Custom `json:"custom"`
+			}{},
+			nil,
+			nil,
+		))
+		Expect(func() {
+			sw.BuildYAML()
+		}).To(Panic())
+	})
+
 	It("can write to a custom buffer", func() {
 		b := bytes.NewBuffer([]byte("hello there!\n"))
 		sw.WriteYAML(b)
