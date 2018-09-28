@@ -277,7 +277,12 @@ func enumerateStructFields(field Field) Fields {
 	return enumerateStructFieldsInner(field.Type, field.Value)
 }
 
-func enumerateStructFieldsInner(fieldType reflect.Type, structValue reflect.Value) Fields {
+func enumerateStructFieldsInner(fieldType reflect.Type, origStructValue reflect.Value) Fields {
+	structValue := origStructValue
+	if structValue.Kind() == reflect.Ptr {
+		structValue = reflect.Zero(fieldType)
+	}
+	structValue = reflect.Indirect(structValue)
 	result := make(Fields, 0, fieldType.NumField())
 	for i := 0; i < fieldType.NumField(); i++ {
 		fieldDef := fieldType.Field(i)

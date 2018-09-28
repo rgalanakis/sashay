@@ -1062,6 +1062,7 @@ info:
 		}
 		type Response struct {
 			Users *[]User `json:"users"`
+			User  *User   `json:"user"`
 		}
 		sw.Add(sashay.NewOperation(
 			"POST",
@@ -1129,6 +1130,8 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/User'
+        user:
+          $ref: '#/components/schemas/User'
     User:
       type: object
       properties:
