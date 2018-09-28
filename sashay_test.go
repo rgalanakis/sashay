@@ -579,6 +579,59 @@ security:
 `))
 	})
 
+	It("generates schemas for embedded structs", func() {
+		type Inside struct {
+			nothere     int
+			InsideField string `json:"insideField"`
+		}
+		type ExportedBase struct {
+			hidden         bool
+			ExportedResult struct {
+				ExportedInside Inside `json:"exportedInside"`
+			} `json:"exportedResult"`
+		}
+		type unexportedBase struct {
+			unexported       string
+			UnexportedResult struct {
+				UnexportedInside Inside `json:"unexportedInside"`
+			} `json:"unexportedResult"`
+		}
+		type Response struct {
+			ExportedBase
+			unexportedBase
+		}
+
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/tags",
+			"",
+			nil,
+			Response{},
+			nil,
+		))
+		Expect(sw.BuildYAML()).To(HaveSuffix(`components:
+  schemas:
+    Inside:
+      type: object
+      properties:
+        insideField:
+          type: string
+    Response:
+      type: object
+      properties:
+        exportedResult:
+          type: object
+          properties:
+            exportedInside:
+              $ref: '#/components/schemas/Inside'
+        unexportedResult:
+          type: object
+          properties:
+            unexportedInside:
+              $ref: '#/components/schemas/Inside'
+`))
+	})
+
 	It("generates schemas for POSTs with request bodies", func() {
 		sw.Add(sashay.NewOperation(
 			"POST",
