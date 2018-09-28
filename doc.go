@@ -391,7 +391,10 @@ You can see the requestBody YAML it generates:
 
 Sashay Detail- Representing Custom Types
 
-Sometimes you want to use Go struct types that are represented as data types in Swagger.
+Note that out of the box, Sashay will treat simple custom types (like `type MyString string`)
+as their underlying simple type, and will walk any custom structs.
+
+However, sometimes you want to use Go struct types that are represented as data types in Swagger.
 Times are an exampmle of this: time.Time is a Go struct type,
 but we want to represent it with a string data type in Swagger (type: string, format: date-time).
 For example, let's say "month" is a common concept in our API, so we represent it with a type:
@@ -639,9 +642,6 @@ Sashay treats value and pointer fields the same.
 In other words, *bool and bool will use the same data type/schema.
 When you register a data type (refer to DefineDataType),
 the same DataTyper is used for pointer fields of that type.
-
-Sashay support for pointer fields is minimal,
-because Swagger's support for nil fields is minimal.
 
 The primary use case for pointer fields in Go is to represent optional fields.
 There's nothing much for Sashay to do with that information,
