@@ -27,6 +27,7 @@ type Sashay struct {
 	licenseName, licenseURL               string
 	tags                                  []swaggerTag
 	dataTypesForTypes                     map[reflect.Type]dataTypeDef
+	dataTypesForKinds                     map[reflect.Kind]dataTypeDef
 }
 
 // New returns a pointer to a new Sashay instance,
@@ -42,6 +43,7 @@ func New(title, description, version string) *Sashay {
 		servers:            make([]swaggerServer, 0),
 		securities:         make([]swaggerSecurity, 0),
 		dataTypesForTypes:  make(map[reflect.Type]dataTypeDef),
+		dataTypesForKinds:  make(map[reflect.Kind]dataTypeDef),
 	}
 
 	for _, v := range BuiltinDataTypeValues {
@@ -152,7 +154,7 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 // DefineDataType defines the DataTyper to use for values with the same type as i.
 //
 // For example, DefineDataType(int(0), SimpleDataTyper("integer", "int64")) means that
-// whenever the options for a boolean field are written out,
+// whenever the options for an integer field (or something of reflect.TypeOf(int(0)).Kind()) are written out,
 // it will get the properties {type: "integer", format: "int64"}.
 //
 // Normally Go structs are not data types- they are either walked (parameter objects)
@@ -182,11 +184,25 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 // See https://swagger.io/specification/#dataTypes
 func (sa *Sashay) DefineDataType(i interface{}, dt DataTyper) {
 	f := NewField(i)
-	sa.dataTypesForTypes[f.Type] = dataTypeDef{f, dt}
+	def := dataTypeDef{f, dt}
+	sa.dataTypesForTypes[f.Type] = def
 	if f.Kind != reflect.Ptr {
 		ptr := reflect.New(f.Type)
 		ptrF := newField(ptr.Interface(), false, nil)
 		sa.dataTypesForTypes[ptrF.Type] = dataTypeDef{ptrF, dt}
+	}
+	sa.defineDataTypeForKind(f.Kind, def)
+}
+
+func (sa *Sashay) defineDataTypeForKind(kind reflect.Kind, dt dataTypeDef) {
+	switch kind {
+	case reflect.Bool,
+		reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64,
+		reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64,
+		reflect.Float32, reflect.Float64,
+		reflect.String:
+
+		sa.dataTypesForKinds[kind] = dt
 	}
 }
 
@@ -223,6 +239,9 @@ func (sa *Sashay) WriteYAMLFile(filename string) error {
 
 func (sa *Sashay) dataTypeDefFor(f Field) (dataTypeDef, bool) {
 	dtd, ok := sa.dataTypesForTypes[f.Type]
+	if !ok {
+		dtd, ok = sa.dataTypesForKinds[f.Kind]
+	}
 	return dtd, ok
 }
 
@@ -277,7 +296,12 @@ func enumerateStructFields(field Field) Fields {
 	return enumerateStructFieldsInner(field.Type, field.Value)
 }
 
-func enumerateStructFieldsInner(fieldType reflect.Type, structValue reflect.Value) Fields {
+func enumerateStructFieldsInner(fieldType reflect.Type, origStructValue reflect.Value) Fields {
+	structValue := origStructValue
+	if structValue.Kind() == reflect.Ptr {
+		structValue = reflect.Zero(fieldType)
+	}
+	structValue = reflect.Indirect(structValue)
 	result := make(Fields, 0, fieldType.NumField())
 	for i := 0; i < fieldType.NumField(); i++ {
 		fieldDef := fieldType.Field(i)

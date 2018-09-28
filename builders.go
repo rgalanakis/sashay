@@ -41,9 +41,10 @@ func (b *baseBuilder) writeNotEmpty(indent int, format string, s string) {
 func (b *baseBuilder) writeDataType(indent int, f Field) {
 	dataTypeDef, found := b.swagger.dataTypeDefFor(f)
 	if !found {
-		// This will likely occur in the wild and indicate some sort of bug,
-		// but I don't know how to repro it or I'd fix the bug :)
-		panicWithFileBug("No dataTypeDef defined for kind %s, type %s.", f.Kind.String(), f.Type.String())
+		panic(fmt.Sprintf("No dataTypeDef defined for kind %s, type %s. You should either change the type, "+
+			"or add a custom data type mapper. See Representing Custom Types at "+
+			"https://godoc.org/github.com/rgalanakis/sashay#hdr-Sashay_Detail__Representing_Custom_Types "+
+			"for more information.", f.Kind.String(), f.Type.String()))
 	}
 	objectFields := ObjectFields{}
 	dataTypeDef.DataTyper(f, objectFields)
