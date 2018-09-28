@@ -233,28 +233,79 @@ func (sa *Sashay) isMappedToDataType(f Field) bool {
 }
 
 // Assuming field.Type is a struct, enumerate all the exported fields as Fields.
+// There are a number of arrangements of fields we need to handle.
+// See the specs for test coverage of all of these cases,
+// but to illustrate, here is a helpfully named struct demonstrating all the variations:
+//
+//    type Demo struct {
+//        simpleUnexported string
+//        SimpleExported string `json:"string"`
+//        inlineUnexported struct {
+//            Field string `json:"field"`
+//        }
+//        InlineExported struct {
+//            Field string `json:"field"`
+//        } `json:"inlineExported"`
+//        structUnexported unexportedStruct
+//        StructExported ExportedStruct
+//        unexportedStruct
+//        ExportedStruct
+//    }
+//
+//    type unexportedStruct struct {
+//        Field string `json:"field"`
+//    }
+//
+//    type ExportedStruct struct {
+//        Field string `json:"field"`
+//    }
+//
+// When handling the structs in Demo:
+// - simpleUnexported cannot be walked because it is not exported and would never show up in JSON, even with a tag.
+// - SimpleExported would show up under the Demo component.
+// - inlineUnexported would likewise not show up (it's unclear how it handle its exported field).
+// - InlineExported and its Field would show up as children of the Demo component.
+// - structUnexported, being an unexported field, is not walked/would not show up.
+// - StructExported would be treated as its own Component, so Demo would have a reference to it.
+// - unexportedStruct and ExportedStruct are both treated the same- they are walked,
+//   and each (exportable/walkable) Field would show up as a child of the Demo component.
+//   Even though ExportedStruct can show up as its own component in the doc
+//   (for that matter, unexportedStruct could as well), because the way OpenAPI handles $ref,
+//   it doesn't appear safe to use both $ref _and_ add more parameters (I may be wrong about this).
+//   So- embedded structs are always walked.
 func enumerateStructFields(field Field) Fields {
-	result := make(Fields, 0)
-	for i := 0; i < field.Type.NumField(); i++ {
-		fieldDef := field.Type.Field(i)
+	return enumerateStructFieldsInner(field.Type, field.Value)
+}
+
+func enumerateStructFieldsInner(fieldType reflect.Type, structValue reflect.Value) Fields {
+	result := make(Fields, 0, fieldType.NumField())
+	for i := 0; i < fieldType.NumField(); i++ {
+		fieldDef := fieldType.Field(i)
 		if !isExportedField(fieldDef) {
 			continue
 		}
-		getterField := field.Value.FieldByName(fieldDef.Name)
-		if !getterField.CanInterface() {
-			// Code should not get here, since we check for exported fields above.
-			panicWithFileBug("Cannot get value of unexported field %s type %s.", fieldDef.Name, field.Type.Name())
+		if fieldDef.Anonymous {
+			result = append(result, enumerateStructFieldsInner(fieldDef.Type, structValue)...)
+		} else {
+			getterField := structValue.FieldByName(fieldDef.Name)
+			if !getterField.CanInterface() {
+				// Code should not get here. What sort of field is unnamed and not-anonymous?
+				panicWithFileBug("Cannot get value of unexported field %s type %s.",
+					fieldDef.Name, fieldType.Name())
+			} else {
+				val := getterField.Interface()
+				result = append(result, NewField(val, fieldDef))
+			}
 		}
-		val := getterField.Interface()
-		result = append(result, NewField(val, fieldDef))
+
 	}
 	return result
 }
 
 // Return true if f is exported.
-// Anonymous structs and those with no name are exported/meant for Swagger.
+// Exported names and anonymous/embedded/inline structs are considered exported for Sashay purposes
+// (meant for Swagger, as per enumerateStructFields).
 func isExportedField(f reflect.StructField) bool {
-	// I don't know if empty string fields could occur in the wild but let's guard against it.
 	if f.Name == "" || f.Anonymous {
 		return true
 	}

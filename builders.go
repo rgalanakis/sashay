@@ -337,10 +337,13 @@ func (b *componentsBuilder) writeSchemas(sortedSchemas Fields) {
 }
 
 // A type will end up in the schema if it has a name and is exported.
-// No name is anonymous, so must be traversed.
+// Inline types (no name) amd embedded structs (Anonymous) should be traversed.
 // Assume lowercase named isn't meant for the swagger doc.
 func (b *componentsBuilder) shouldRecurseStructField(f Field) bool {
 	if f.Type.Name() == "" {
+		return true
+	}
+	if f.StructField.Anonymous {
 		return true
 	}
 	return !isExportedName(f.Type.Name())
