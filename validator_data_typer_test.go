@@ -3,11 +3,12 @@ package sashay_test
 import (
 	"testing"
 
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/rgalanakis/sashay"
 	"reflect"
 	"strings"
+
+	"github.com/cloudability/sashay"
+	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/gomega"
 )
 
 func TestValidatorDataTyper(t *testing.T) {

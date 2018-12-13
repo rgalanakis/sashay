@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/rgalanakis/sashay"
+	"github.com/cloudability/sashay"
 )
 
 // Stand-in for whatever HTTP framework you are using

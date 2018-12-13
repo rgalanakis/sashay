@@ -43,7 +43,7 @@ func (b *baseBuilder) writeDataType(indent int, f Field) {
 	if !found {
 		panic(fmt.Sprintf("No dataTypeDef defined for kind %s, type %s. You should either change the type, "+
 			"or add a custom data type mapper. See Representing Custom Types at "+
-			"https://godoc.org/github.com/rgalanakis/sashay#hdr-Sashay_Detail__Representing_Custom_Types "+
+			"https://godoc.org/github.com/cloudability/sashay#hdr-Sashay_Detail__Representing_Custom_Types "+
 			"for more information.", f.Kind.String(), f.Type.String()))
 	}
 	objectFields := ObjectFields{}

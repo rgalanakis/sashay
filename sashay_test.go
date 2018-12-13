@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
+	"github.com/cloudability/sashay"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/rgalanakis/sashay"
 )
 
 func TestSwagger(t *testing.T) {

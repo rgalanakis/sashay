@@ -2,7 +2,8 @@ package sashay_test
 
 import (
 	"fmt"
-	"github.com/rgalanakis/sashay"
+
+	"github.com/cloudability/sashay"
 )
 
 func Example_readme() {

@@ -2,10 +2,11 @@ package sashay_test
 
 import (
 	"fmt"
+	"reflect"
+
+	"github.com/cloudability/sashay"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/rgalanakis/sashay"
-	"reflect"
 )
 
 func ExampleZeroSliceValueField() {

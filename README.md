@@ -1,9 +1,3 @@
-[![Build Status](https://travis-ci.org/rgalanakis/sashay.svg?branch=master)](https://travis-ci.org/rgalanakis/sashay)
-[![codecov](https://codecov.io/gh/rgalanakis/sashay/branch/master/graph/badge.svg)](https://codecov.io/gh/rgalanakis/sashay)
-
-[![GoDoc](https://godoc.org/github.com/rgalanakis/sashay?status.svg)](http://godoc.org/github.com/rgalanakis/sashay)
-[![license](http://img.shields.io/badge/license-MIT-orange.svg)](https://raw.githubusercontent.com/rgalanakis/sashay/master/LICENSE)
-
 # Sashay
 
 Sashay allows you to generate OpenAPI 3.0 (Swagger) files using executable Go code,
@@ -183,6 +177,6 @@ components:
           type: string
 ```
 
-See the [documentation at godoc.org](https://godoc.org/github.com/rgalanakis/sashay)
+See the [documentation at godoc.org](https://godoc.org/github.com/cloudability/sashay)
 for more information and tutorials about how to use Sashay.
 See [https://swagger.io/specification/](https://swagger.io/specification/) for more info about the spec.

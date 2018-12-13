@@ -397,7 +397,7 @@ func SelectMap(source *Sashay, fn func(op Operation) *Operation) *Sashay {
 }
 
 const fileBugBasePanicMsg = "This should not occur in the wild. " +
-	"Please file a bug at https://github.com/rgalanakis/sashay/issues/new " +
+	"Please file a bug at https://github.com/cloudability/sashay/issues/new " +
 	"with as much reproduction information as possible, " +
 	"including its definition, and the definition of the type/s using it for a field."
 
