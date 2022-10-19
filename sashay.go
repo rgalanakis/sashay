@@ -162,19 +162,19 @@ func (ss swaggerSecurity) Fields() ObjectFields {
 // However, some structs, like time.Time, should be represented as data types.
 // To achieve this, the DataTyper for time.Time is defined as:
 //
-//     sw.DefineDataType(time.Time{}, SimpleDataTyper("string", "date-time"))
+//	sw.DefineDataType(time.Time{}, SimpleDataTyper("string", "date-time"))
 //
 // So whenever a time.Time value is seen, the fields {type: "string", format:"date-time"} are used.
 //
 // Callers can use DefineDataType(myStruct{}, provide define their own DataTyper for structs that they.
 // They can use SimpleDataTyper, or provide a function with dynamic logic for what fields to add:
 //
-//     sw.DefineDataType(FormattableString{}, func(f Field, of ObjectFields) {
-//       of["type"] = "string"
-//       if val, ok := f.StructField.Tag.Lookup("format"); ok {
-//         of["format"] = val
-//       }
-//     })
+//	sw.DefineDataType(FormattableString{}, func(f Field, of ObjectFields) {
+//	  of["type"] = "string"
+//	  if val, ok := f.StructField.Tag.Lookup("format"); ok {
+//	    of["format"] = val
+//	  }
+//	})
 //
 // The DataTyper above will be called for any struct field with a type of FormattableString,
 // and use a value for the "format" field based on the struct field's tag.
@@ -256,42 +256,42 @@ func (sa *Sashay) isMappedToDataType(f Field) bool {
 // See the specs for test coverage of all of these cases,
 // but to illustrate, here is a helpfully named struct demonstrating all the variations:
 //
-//    type Demo struct {
-//        simpleUnexported string
-//        SimpleExported string `json:"string"`
-//        inlineUnexported struct {
-//            Field string `json:"field"`
-//        }
-//        InlineExported struct {
-//            Field string `json:"field"`
-//        } `json:"inlineExported"`
-//        structUnexported unexportedStruct
-//        StructExported ExportedStruct
-//        unexportedStruct
-//        ExportedStruct
-//    }
+//	type Demo struct {
+//	    simpleUnexported string
+//	    SimpleExported string `json:"string"`
+//	    inlineUnexported struct {
+//	        Field string `json:"field"`
+//	    }
+//	    InlineExported struct {
+//	        Field string `json:"field"`
+//	    } `json:"inlineExported"`
+//	    structUnexported unexportedStruct
+//	    StructExported ExportedStruct
+//	    unexportedStruct
+//	    ExportedStruct
+//	}
 //
-//    type unexportedStruct struct {
-//        Field string `json:"field"`
-//    }
+//	type unexportedStruct struct {
+//	    Field string `json:"field"`
+//	}
 //
-//    type ExportedStruct struct {
-//        Field string `json:"field"`
-//    }
+//	type ExportedStruct struct {
+//	    Field string `json:"field"`
+//	}
 //
 // When handling the structs in Demo:
-// - simpleUnexported cannot be walked because it is not exported and would never show up in JSON, even with a tag.
-// - SimpleExported would show up under the Demo component.
-// - inlineUnexported would likewise not show up (it's unclear how it handle its exported field).
-// - InlineExported and its Field would show up as children of the Demo component.
-// - structUnexported, being an unexported field, is not walked/would not show up.
-// - StructExported would be treated as its own Component, so Demo would have a reference to it.
-// - unexportedStruct and ExportedStruct are both treated the same- they are walked,
-//   and each (exportable/walkable) Field would show up as a child of the Demo component.
-//   Even though ExportedStruct can show up as its own component in the doc
-//   (for that matter, unexportedStruct could as well), because the way OpenAPI handles $ref,
-//   it doesn't appear safe to use both $ref _and_ add more parameters (I may be wrong about this).
-//   So- embedded structs are always walked.
+//   - simpleUnexported cannot be walked because it is not exported and would never show up in JSON, even with a tag.
+//   - SimpleExported would show up under the Demo component.
+//   - inlineUnexported would likewise not show up (it's unclear how it handle its exported field).
+//   - InlineExported and its Field would show up as children of the Demo component.
+//   - structUnexported, being an unexported field, is not walked/would not show up.
+//   - StructExported would be treated as its own Component, so Demo would have a reference to it.
+//   - unexportedStruct and ExportedStruct are both treated the same- they are walked,
+//     and each (exportable/walkable) Field would show up as a child of the Demo component.
+//     Even though ExportedStruct can show up as its own component in the doc
+//     (for that matter, unexportedStruct could as well), because the way OpenAPI handles $ref,
+//     it doesn't appear safe to use both $ref _and_ add more parameters (I may be wrong about this).
+//     So- embedded structs are always walked.
 func enumerateStructFields(field Field) Fields {
 	return enumerateStructFieldsInner(field.Type, field.Value)
 }

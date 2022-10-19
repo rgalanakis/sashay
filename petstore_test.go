@@ -32,7 +32,7 @@ func PetStoreSwagger() *sashay.Sashay {
 		AddTag("user", "Operations about user")
 }
 
-//noinspection GoUnusedExportedFunction
+// noinspection GoUnusedExportedFunction
 func StartServer() {
 	sw := PetStoreSwagger()
 	router := &FrameworkRouter{}
@@ -46,7 +46,7 @@ func StartServer() {
 }
 
 // handlers.go file
-//noinspection GoUnusedParameter
+// noinspection GoUnusedParameter
 func GetPets(http.ResponseWriter, *http.Request) {
 	// Your code here
 }

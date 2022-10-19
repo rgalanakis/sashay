@@ -22,7 +22,7 @@ a bit of annotation to struct tags or using some Sashay types around your API's 
 
 See https://swagger.io/specification/ for more information about the OpenAPI 3.0 spec.
 
-Sashay Tutorial
+# Sashay Tutorial
 
 There are generally three parts to defining and generating Swagger docs using Sashay:
 
@@ -49,7 +49,7 @@ the Pet Store example is only one such structure, with centralized routing and g
 Sashay, being a library, can fit into any application setup.
 It just needs to get the right calls, which should be clear by the end, as the API has very few moving parts.
 
-Tutorial Step 1- Define Service Level Settings
+# Tutorial Step 1- Define Service Level Settings
 
 In our example petstore.yaml file, we have the following settings that apply to the service,
 rather than any specific paths, operations, or resources:
@@ -104,8 +104,7 @@ as it maps cleanly.
 This code uses "apiKey" security, via AddAPIKeySecurity. The sashay.Sashay object also has
 AddBasicAuthSecurity and AddJWTSecurity methods available.
 
-
-Tutorial Step 2- Define Operations
+# Tutorial Step 2- Define Operations
 
 An "operation" in OpenAPI 3.0 is a description for a path/route and method.
 For example, here is the GET /pets endpoint Swagger YAML:
@@ -205,8 +204,7 @@ In this code, we have a custom Route struct that marries the Operation along wit
 		},
 	}
 
-
-Tutorial Step 3- Generate the OpenAPI File
+# Tutorial Step 3- Generate the OpenAPI File
 
 Finally, there is the server startup code, usually in some sort of main() function.
 This code initializes a new sashay.Sashay instance, registers routes,
@@ -244,8 +242,7 @@ the following code is just an idea to show how this all fits together.
 That's all there is to it. You can see a fuller example in the petstore_test.go file,
 which contains the preceding code but with more routes.
 
-
-Sashay Detail- Basic Parameters
+# Sashay Detail- Basic Parameters
 
 The sashay.Operation object supports defining an endpoint's parameters.
 Because parameter settings can be quite detailed,
@@ -348,7 +345,7 @@ Even if the same type is used for a request and a response,
 it'll be expanded in the requestBody section and a $ref in the response section.
 This may change in the future.
 
-Sashay Detail- Request Bodies
+# Sashay Detail- Request Bodies
 
 Struct types can also be used in parameters.
 Usually, these will be nested structs for request bodies:
@@ -389,7 +386,7 @@ You can see the requestBody YAML it generates:
 						last:
 						  type: string
 
-Sashay Detail- Representing Custom Types
+# Sashay Detail- Representing Custom Types
 
 Note that out of the box, Sashay will treat simple custom types (like `type MyString string`)
 as their underlying simple type, and will walk any custom structs.
@@ -479,7 +476,7 @@ and specifies the "format" field based on that:
 		}
 	})
 
-Sashay Detail- Other Advanced DataTyper Usage
+# Sashay Detail- Other Advanced DataTyper Usage
 
 We can use DefineDataType to customize all sorts of behavior.
 One common usage is parsing tags to specify other information about a field, like we did with "timeunit" above.
@@ -516,8 +513,7 @@ For an example of this in action, and a good basis for hooking your own validati
 see validator_data_typer_test.go. It includes a fully-functional example using go-validator style struct tags
 to inform data type fields.
 
-
-Sashay Detail- Responses
+# Sashay Detail- Responses
 
 The other part of sashay.Operation that may require some customization are usually responses.
 Sashay tries to be smart and enforce some conventions:
@@ -636,7 +632,7 @@ it is assumed to be of content type text/plain.
 
 - If a response is an empty struct (`struct{}{}`), use application/json with no schema.
 
-Sashay Detail- Pointer Fields
+# Sashay Detail- Pointer Fields
 
 Sashay treats value and pointer fields the same.
 In other words, *bool and bool will use the same data type/schema.
