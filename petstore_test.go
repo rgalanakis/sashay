@@ -2,12 +2,10 @@ package sashay_test
 
 import (
 	"fmt"
-
+	"github.com/rgalanakis/sashay"
 	"io/ioutil"
 	"net/http"
 	"os"
-
-	"github.com/rgalanakis/sashay"
 )
 
 // Stand-in for whatever HTTP framework you are using

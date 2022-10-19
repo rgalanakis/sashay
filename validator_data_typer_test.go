@@ -1,19 +1,12 @@
 package sashay_test
 
 import (
-	"testing"
-
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/rgalanakis/sashay"
 	"reflect"
 	"strings"
 )
-
-func TestValidatorDataTyper(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "ValidatorDataTyper Suite")
-}
 
 // RegisterValidatorDataTypes registers override DataTypers for all builtin data types.
 func RegisterValidatorDataTypes(sa *sashay.Sashay) {

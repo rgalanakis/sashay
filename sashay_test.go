@@ -2,21 +2,20 @@ package sashay_test
 
 import (
 	"bytes"
+	. "github.com/onsi/ginkgo/v2"
+	. "github.com/onsi/gomega"
+	"github.com/rgalanakis/sashay"
 	"io/ioutil"
 	"math/rand"
 	"os"
 	"strings"
 	"testing"
 	"time"
-
-	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
-	"github.com/rgalanakis/sashay"
 )
 
-func TestSwagger(t *testing.T) {
+func TestSashay(t *testing.T) {
 	RegisterFailHandler(Fail)
-	RunSpecs(t, "SwaggerGen Suite")
+	RunSpecs(t, "Sashay Suite")
 }
 
 type User struct {

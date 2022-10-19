@@ -1,20 +1,12 @@
 package sashay
 
 import (
-	"reflect"
-	"testing"
-
-	. "github.com/onsi/ginkgo"
+	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
+	"reflect"
 )
 
-func TestSwaggerInternals(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Swagger internals test Suite")
-}
-
 var _ = Describe("Swagger internals test", func() {
-
 	Describe("jsonName", func() {
 		type Tester struct {
 			Dash       int `json:"-"`
