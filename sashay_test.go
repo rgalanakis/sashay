@@ -1385,4 +1385,50 @@ paths:
               schema:
                 type: object`))
 	})
+	It("can handle nested generic objects", func() {
+		type t struct {
+			Map      map[string]interface{}   `json:"map"`
+			Slice    []interface{}            `json:"slice"`
+			SliceMap []map[string]interface{} `json:"slicemap"`
+		}
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"",
+			t{},
+			t{},
+			t{},
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    get:
+      operationId: getUsers
+      responses:
+        '200':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/t'
+        'default':
+          description: error response
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/t'
+components:
+  schemas:
+    t:
+      type: object
+      properties:
+        map:
+          type: object
+        slice:
+          type: array
+          items:
+        slicemap:
+          type: array
+          items:
+            type: object`))
+	})
 })

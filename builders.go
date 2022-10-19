@@ -87,7 +87,7 @@ func (b *baseBuilder) writeStructSchema(indent int, f Field, recurse func(Field)
 				} else {
 					b.writeRefSchema(indent+3, sliceField)
 				}
-			} else {
+			} else if sliceField.Kind != reflect.Invalid {
 				b.writeDataType(indent+3, sliceField)
 			}
 		} else {
