@@ -41,10 +41,14 @@ func (b *baseBuilder) writeNotEmpty(indent int, format string, s string) {
 func (b *baseBuilder) writeDataType(indent int, f Field) {
 	dataTypeDef, found := b.swagger.dataTypeDefFor(f)
 	if !found {
+		ts := "(no type)"
+		if f.Type != nil {
+			ts = f.Type.String()
+		}
 		panic(fmt.Sprintf("No dataTypeDef defined for kind %s, type %s. You should either change the type, "+
 			"or add a custom data type mapper. See Representing Custom Types at "+
 			"https://godoc.org/github.com/rgalanakis/sashay#hdr-Sashay_Detail__Representing_Custom_Types "+
-			"for more information.", f.Kind.String(), f.Type.String()))
+			"for more information.", f.Kind.String(), ts))
 	}
 	objectFields := ObjectFields{}
 	dataTypeDef.DataTyper(f, objectFields)
@@ -107,7 +111,7 @@ func (b *baseBuilder) writeRefSchema(indent int, f Field) {
 		} else {
 			b.writeLn(indent, "$ref: '%s'", schemaRefLink(f))
 		}
-	} else {
+	} else if f.Kind != reflect.Invalid {
 		b.writeDataType(indent, f)
 	}
 }
@@ -252,6 +256,18 @@ func (b *pathBuilder) writePaths() {
 }
 
 func (b *pathBuilder) writeParams(indent int, f Field) {
+	if f.Kind != reflect.Struct {
+		b.base.writeLn(indent, "requestBody:")
+		b.base.writeLn(indent+1, "content:")
+		b.base.writeLn(indent+2, "*/*:")
+		b.base.writeLn(indent+3, "schema:")
+		if f.Kind == reflect.Map {
+			b.base.writeLn(indent+4, "type: object")
+		} else if f.Kind == reflect.Slice {
+			b.base.writeLn(indent+4, "type: array")
+		}
+		return
+	}
 	writeParams := b.base.writeOnce(indent, "parameters:")
 	for _, field := range enumerateStructFields(f) {
 		tag := field.StructField.Tag

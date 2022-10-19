@@ -99,6 +99,10 @@ func BuiltinDataTyperFor(value interface{}, chained ...DataTyper) DataTyper {
 		dt = SimpleDataTyper("number", "float")
 	case time.Time, *time.Time:
 		dt = SimpleDataTyper("string", "date-time")
+	case map[string]interface{}:
+		dt = SimpleDataTyper("object", "")
+	case []interface{}, []map[string]interface{}:
+		dt = SimpleDataTyper("array", "")
 	}
 	typers := []DataTyper{dt, defaultDataTyper}
 	typers = append(typers, chained...)
