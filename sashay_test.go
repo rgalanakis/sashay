@@ -1284,4 +1284,105 @@ paths:
 		contents, err := ioutil.ReadFile(f.Name())
 		Expect(string(contents)).To(ContainSubstring("SwaggerGenAPI"))
 	})
+
+	It("can handle maps", func() {
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"",
+			map[string]interface{}{},
+			map[string]interface{}{},
+			map[string]interface{}{},
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    get:
+      operationId: getUsers
+      requestBody:
+        content:
+          */*:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                type: object
+        'default':
+          description: error response
+          content:
+            application/json:
+              schema:
+                type: object`))
+	})
+	It("can handle interface slices", func() {
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"",
+			[]interface{}{},
+			[]interface{}{},
+			[]interface{}{},
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    get:
+      operationId: getUsers
+      requestBody:
+        content:
+          */*:
+            schema:
+              type: array
+      responses:
+        '200':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+        'default':
+          description: error response
+          content:
+            application/json:
+              schema:
+                type: array
+                items:`))
+	})
+	It("can handle subtypes of maps", func() {
+		type submap map[string]interface{}
+		sw.DefineDataType(submap{}, sashay.SimpleDataTyper("object", ""))
+		sw.Add(sashay.NewOperation(
+			"GET",
+			"/users",
+			"",
+			submap{},
+			submap{},
+			submap{},
+		))
+		Expect(sw.BuildYAML()).To(ContainSubstring(`paths:
+  /users:
+    get:
+      operationId: getUsers
+      requestBody:
+        content:
+          */*:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: ok response
+          content:
+            application/json:
+              schema:
+                type: object
+        'default':
+          description: error response
+          content:
+            application/json:
+              schema:
+                type: object`))
+	})
 })
